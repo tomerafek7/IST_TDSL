@@ -5,6 +5,7 @@ public class ISTRebuildObject<V> {
     IST<V> oldIstTree;
     IST<V> newIstTree;
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
+    static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
 
 
     public ISTInnerNode<V> buildIdealISTree(ArrayList<ISTSingleNode<V>> KVPairList) {
@@ -64,7 +65,7 @@ public class ISTRebuildObject<V> {
 
 
     }
-    boolean rebuildAndSetChild (int keyCount,int index) {
+    boolean rebuildAndSetChild (int keyCount,int index) {//keyCount is of the parent node which initiated the rebuild
         int totalChildren = (int)Math.floor( Math.sqrt((double)keyCount));
         int childSize = Math.floorDiv(keyCount,totalChildren);
         int remainder = keyCount %totalChildren;
@@ -83,7 +84,34 @@ public class ISTRebuildObject<V> {
         return true;
 
     }
+    void CreateIdealCollaborative (int keyCount) {
+        if (keyCount < COLLABORATION_THRESHOLD) {
+            ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
+            List = createKVPairsList(List, oldIstTree.root,0,keyCount);
+            newIstTree.root = buildIdealISTree(List);
+        }
+        else {
+            newIstTree.root = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)));
+            //TODO add support in multi threading; if not CAS etc.
+        }
+       if (keyCount > COLLABORATION_THRESHOLD) {
+           while (true) {
+               int index = newIstTree.root.waitQueueIndex ; // TODO: add support - index = READ(newRoot. wait_queue_idx)
+               if (index == newIstTree.root.numOfChildren) break; // each child has a thread working on it;
+               newIstTree.root.waitQueueIndex ++;
+               rebuildAndSetChild(keyCount, index); //TODO : add support to multi treading - if CAS(newRoot.wait_queue_idx, index, index + 1) then ...
+           }
+           for (int i=0; i<newIstTree.root.numOfChildren; i ++){
+               ISTNode<V> child = newIstTree.root.children.get(i);
+               if (child == null) { //can happen only in multi treading- 1 of the threads did not finish
+                   if ( ! rebuildAndSetChild(keyCount,i)) {
+                       return; //TODO maoras: maybe not needed
+                   }
+               }
+           }
+       }
 
+    }
 
 
 }
