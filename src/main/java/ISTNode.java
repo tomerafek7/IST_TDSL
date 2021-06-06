@@ -1,5 +1,5 @@
 
-public class ISTNode<K,V> {
+public class ISTNode<V> {
 
 }
 
