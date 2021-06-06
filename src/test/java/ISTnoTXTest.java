@@ -85,7 +85,5 @@ public class ISTnoTXTest {
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
         }
-
-
     }
 }

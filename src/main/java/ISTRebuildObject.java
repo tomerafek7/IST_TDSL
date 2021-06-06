@@ -4,7 +4,8 @@ import java.lang.Math;
 public class ISTRebuildObject<V> {
     IST<V> oldIstTree;
     IST<V> newIstTree;
-    static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
+    static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might find a better value
+    static final int COLLABORATION_THRESHOLD = 10; //TODO: might find a better value
 
 
     public ISTInnerNode<V> buildIdealISTree(ArrayList<ISTSingleNode<V>> KVPairList) {
@@ -81,9 +82,41 @@ public class ISTRebuildObject<V> {
         //TODO : this should be done in respect of multi threads later.
         newIstTree.root.children.set(index,child);
         return true;
-
     }
 
+    public int subTreeCount(ISTNode<V> curNode){
 
+        if (curNode instanceof ISTSingleNode){
+            return ((ISTSingleNode<V>) curNode).isEmpty ? 0 : 1;
+        }
+        // here node is inner
+        ISTInnerNode<V> innerCurNode = (ISTInnerNode<V>)curNode;
+        if (innerCurNode.numOfChildren > COLLABORATION_THRESHOLD) {
+            while (true) { // work queue
+                int index = innerCurNode.waitQueueIndex++; // TODO: fetch-and-add
+                if (index >= innerCurNode.numOfChildren) break;
+                subTreeCount(innerCurNode.children.get(index));
+            }
+        }
+        int keyCount = 0;
+        for (ISTNode<V> child : innerCurNode.children){
+            if (child instanceof ISTSingleNode){
+                keyCount += ((ISTSingleNode<V>) child).isEmpty ? 0 : 1;
+            } else { // inner
+                ISTInnerNode<V> innerChild = (ISTInnerNode<V>)child;
+                int count = innerChild.numOfLeaves; // TODO: need to read count & finished atomically!
+                boolean finished = innerChild.finishedCount;
+                if(finished) {
+                    keyCount += count;
+                } else{
+                  keyCount += subTreeCount(child);
+                }
+            }
+        }
+        innerCurNode.numOfLeaves = keyCount; // TODO: need to update both fields atomically!
+        innerCurNode.finishedCount = true;
+
+        return keyCount;
+    }
 
 }
