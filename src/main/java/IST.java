@@ -1,6 +1,7 @@
 import com.sun.tools.javac.util.Pair;
+import org.junit.function.ThrowingRunnable;
+
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class IST <V> {
 
@@ -9,7 +10,10 @@ public class IST <V> {
 
     IST(){
         this.root = new ISTInnerNode<>(INIT_SIZE);
-        this.root.children.set(0, new ISTSingleNode<>(0, null, true));
+        this.root.minKey = Integer.MAX_VALUE;
+        this.root.maxKey = Integer.MAX_VALUE;
+        //this.root.keys.add(Integer.MAX_VALUE);
+        this.root.children.add(new ISTSingleNode<>(0, null, true));
     }
 
     public int interpolate(ISTInnerNode<V> node, Integer key){
@@ -60,7 +64,7 @@ public class IST <V> {
         // reached a leaf
         // TODO: ReadSet(curNode)
         ISTSingleNode<V> leaf = ((ISTSingleNode<V>) curNode);
-        if (leaf.key.equals(key)){
+        if (leaf.key.equals(key) && !leaf.isEmpty){
             return leaf.value;
         } else {
             return null;
@@ -88,9 +92,15 @@ public class IST <V> {
                 leaf.value = value; //  TODO: Write Set
             } else { // different key --> split into 2 singles
                 ArrayList<ISTSingleNode<V>> childrenList = new ArrayList<>();
-                childrenList.add((ISTSingleNode<V>)curNode);
                 ISTSingleNode<V> newSingle = new ISTSingleNode<>(key, value, false);
-                childrenList.add(newSingle);
+                // choose the children order: (the first to insert must be the smaller one)
+                if(key < leaf.key){
+                    childrenList.add(newSingle);
+                    childrenList.add((ISTSingleNode<V>)curNode);
+                } else {
+                    childrenList.add((ISTSingleNode<V>) curNode);
+                    childrenList.add(newSingle);
+                }
                 ISTInnerNode<V> newInner = new ISTInnerNode<>(childrenList);
                 assert parentNode != null;
                 assert idx != -1;
@@ -130,17 +140,16 @@ public class IST <V> {
                 leaf.isEmpty = true; //  TODO: Write Set
             } else { // different key --> ERROR
                 // TODO: throw exception?
-                int a = 1; // remove...
+                assert(false);
             }
         } else { // empty leaf --> ERROR
             // TODO: throw exception?
-            int a = 1; // remove...
+            assert(false);
         }
 
         // TODO:
         // For node in path:
         // FAA(node.rebuild_counter, 1)
-
     }
 
 }

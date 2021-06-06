@@ -7,6 +7,8 @@ public class ISTSingleNode<V> extends ISTNode<V>{
        this.key = key;
        this.value = value;
        this.isEmpty = isEmpty;
+       this.minKey = key;
+       this.maxKey = key;
     }
 
 }

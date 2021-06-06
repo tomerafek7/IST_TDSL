@@ -8,7 +8,8 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
     int updateCount;
     int activeTX;
     int waitQueueIndex;
-    ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList){
+
+    public ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList){
         numOfLeaves = 0;
         updateCount = 0;
         activeTX = 0;
@@ -16,16 +17,17 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         numOfChildren = childrenList.size();
         children = new ArrayList<ISTNode<V>>(childrenList);
         //children = childrenList;
-
+        keys = new ArrayList<Integer>();
         for (int i=1; i<childrenList.size(); i++){
             keys.add(childrenList.get(i).key);
-
         }
         minKey = keys.get(0);
         maxKey = keys.get(keys.size()-1);
     }
 
     public ISTInnerNode(int numOfChildrenReceived) {
+        minKey = 0;
+        maxKey = 0;
         numOfLeaves = 0;
         updateCount = 0;
         activeTX = 0;
@@ -34,4 +36,5 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         keys = new ArrayList<Integer> ();
         children = new ArrayList<ISTNode<V>> ();
     }
+
 }
