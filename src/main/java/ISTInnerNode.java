@@ -15,7 +15,8 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         waitQueueIndex = 0;
         numOfChildren = childrenList.size();
         children = new ArrayList<ISTNode<V>>(childrenList);
-        //children = childrenList;
+        keys = new ArrayList<>();
+        //children = childrenList; TODO: maybe this is valid and better
 
         for (int i=1; i<childrenList.size(); i++){
             keys.add(childrenList.get(i).key);
@@ -31,7 +32,7 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         activeTX = 0;
         waitQueueIndex = 0;
         numOfChildren = numOfChildrenReceived;
-        keys = new ArrayList<Integer> ();
+        keys = new ArrayList<>();
         children = new ArrayList<ISTNode<V>> ();
     }
 }
