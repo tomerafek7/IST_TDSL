@@ -4,7 +4,13 @@ import java.util.Collections;
 
 public class IST <V> {
 
-    ISTNode<V> root;
+    ISTInnerNode<V> root;
+    final static int INIT_SIZE = 1;
+
+    IST(){
+        this.root = new ISTInnerNode<>(INIT_SIZE);
+        this.root.children.set(0, new ISTSingleNode<>(0, null, true));
+    }
 
     public int interpolate(ISTInnerNode<V> node, Integer key){
         Integer minKey = node.minKey;
@@ -83,7 +89,7 @@ public class IST <V> {
             } else { // different key --> split into 2 singles
                 ArrayList<ISTSingleNode<V>> childrenList = new ArrayList<>();
                 childrenList.add((ISTSingleNode<V>)curNode);
-                ISTSingleNode<V> newSingle = new ISTSingleNode<>(key, value);
+                ISTSingleNode<V> newSingle = new ISTSingleNode<>(key, value, false);
                 childrenList.add(newSingle);
                 ISTInnerNode<V> newInner = new ISTInnerNode<>(childrenList);
                 assert parentNode != null;
@@ -98,7 +104,7 @@ public class IST <V> {
         }
 
         // TODO:
-        // For node In path:
+        // For node in path:
         // FAA(node.rebuild_counter, 1)
 
     }
@@ -132,7 +138,7 @@ public class IST <V> {
         }
 
         // TODO:
-        // For node In path:
+        // For node in path:
         // FAA(node.rebuild_counter, 1)
 
     }
