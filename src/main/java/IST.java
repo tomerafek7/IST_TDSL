@@ -1,5 +1,5 @@
-public class IST {
+public class IST<V> {
 
-
+ISTNode<V> root;
 
 }

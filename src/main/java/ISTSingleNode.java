@@ -1,4 +1,4 @@
-public class ISTSingleNode<K,V> extends ISTNode<K,V>{
-    K key;
+public class ISTSingleNode<V> extends ISTNode<V>{
+    Integer key;
     V value;
 }
