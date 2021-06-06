@@ -62,9 +62,8 @@ public class ISTRebuildObject<V> {
             }
         }
         return List;
-
-
     }
+
     boolean rebuildAndSetChild (int keyCount,int index) {//keyCount is of the parent node which initiated the rebuild
         int totalChildren = (int)Math.floor( Math.sqrt((double)keyCount));
         int childSize = Math.floorDiv(keyCount,totalChildren);
@@ -84,7 +83,7 @@ public class ISTRebuildObject<V> {
         return true;
     }
 
-    void CreateIdealCollaborative (int keyCount) {
+    void CreateIdealCollaborative(int keyCount) {
         if (keyCount < COLLABORATION_THRESHOLD) {
             ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
             List = createKVPairsList(List, oldIstTree.root,0,keyCount);
