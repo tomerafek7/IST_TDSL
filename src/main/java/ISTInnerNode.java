@@ -9,6 +9,8 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
     int waitQueueIndex;
     int numOfLeaves; // used only in rebuild
     boolean finishedCount; // used only in rebuild
+    boolean rebuildFlag;
+    ISTRebuildObject<V> rebuildObject;
 
     public ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList){
         numOfLeaves = 0;
@@ -18,6 +20,7 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         waitQueueIndex = 0;
         numOfChildren = childrenList.size();
         children = new ArrayList<ISTNode<V>>(childrenList);
+        rebuildFlag = false;
         keys = new ArrayList<>();
         //children = childrenList; TODO: maybe this is valid and better
 
@@ -38,6 +41,7 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         activeTX = 0;
         waitQueueIndex = 0;
         numOfChildren = numOfChildrenReceived;
+        rebuildFlag = false;
         keys = new ArrayList<>();
         children = new ArrayList<ISTNode<V>> ();
     }
