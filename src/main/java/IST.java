@@ -1,12 +1,15 @@
 import com.sun.tools.javac.util.Pair;
+import org.junit.Assert;
 import org.junit.function.ThrowingRunnable;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 
 public class IST <V> {
 
     ISTInnerNode<V> root;
     final static int INIT_SIZE = 1;
+    final static int PRINT_SPACE = 10;
 
     IST(){
         this.root = new ISTInnerNode<>(INIT_SIZE);
@@ -152,4 +155,25 @@ public class IST <V> {
         // FAA(node.rebuild_counter, 1)
     }
 
+    public void print(){
+        _printIST(root, "");
+    }
+
+    public void _printIST(ISTNode<V> curNode, String indent) {
+        if (curNode instanceof ISTSingleNode) {
+            String key = ((ISTSingleNode<V>) curNode).isEmpty ? "X" : ((ISTSingleNode<V>) curNode).key.toString();
+            System.out.println(indent + key);
+        }
+        else {
+            ISTInnerNode<V> curNodeInner = ((ISTInnerNode<V>) curNode);
+            for(int i=curNodeInner.numOfChildren-1; i>=0; i--){
+                if(i > 0){
+                    System.out.println(indent + curNodeInner.keys.get(i-1));
+                }
+                _printIST(curNodeInner.children.get(i), indent + "      ");
+            }
+        }
+    }
+
 }
+

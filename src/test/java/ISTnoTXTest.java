@@ -34,6 +34,7 @@ public class ISTnoTXTest {
         Assert.assertEquals("___", myTree.lookup(131));
         Assert.assertEquals("bye", myTree.lookup(3));
         Assert.assertEquals("abc", myTree.lookup(100));
+        myTree.print();
     }
 
     @Test

@@ -64,7 +64,7 @@ public class ISTRebuildObject<V> {
         return List;
     }
 
-    boolean rebuildAndSetChild (int keyCount,int index) {//keyCount is of the parent node which initiated the rebuild
+    boolean rebuildAndSetChild (int keyCount,int index) { //keyCount is of the parent node which initiated the rebuild
         int totalChildren = (int)Math.floor( Math.sqrt((double)keyCount));
         int childSize = Math.floorDiv(keyCount,totalChildren);
         int remainder = keyCount %totalChildren;
