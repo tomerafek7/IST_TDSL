@@ -207,7 +207,9 @@ public class IST <V> {
     }
 
     public void print(){
+        System.out.println("IST: \n");
         _printIST(root, "");
+        System.out.println("\n\n");
     }
 
     public void _printIST(ISTNode<V> curNode, String indent) {
@@ -218,8 +220,8 @@ public class IST <V> {
         else {
             ISTInnerNode<V> curNodeInner = ((ISTInnerNode<V>) curNode);
             for(int i=curNodeInner.numOfChildren-1; i>=0; i--){
-                if(i > 0){
-                    System.out.println(indent + curNodeInner.keys.get(i-1));
+                if(i < curNodeInner.numOfChildren-1){
+                    System.out.println(indent + curNodeInner.keys.get(i));
                 }
                 _printIST(curNodeInner.children.get(i), indent + "      ");
             }

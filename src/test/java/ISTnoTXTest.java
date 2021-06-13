@@ -34,7 +34,7 @@ public class ISTnoTXTest {
         Assert.assertEquals("___", myTree.lookup(131));
         Assert.assertEquals("bye", myTree.lookup(3));
         Assert.assertEquals("abc", myTree.lookup(100));
-        myTree.print();
+        //myTree.print();
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ISTnoTXTest {
         Assert.assertEquals("abcd", myTree.lookup(-100));
     }
 
-    @Test
+    //@Test
     public void randomTest(){
         IST<Integer> myTree = new IST<>();
         Random rand = new Random();
@@ -86,5 +86,40 @@ public class ISTnoTXTest {
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
         }
+    }
+
+    @Test
+    public void testRebuild(){
+        IST<String> myTree = new IST<>();
+        myTree.insert(3,"hi");
+        Assert.assertEquals(myTree.lookup(3), "hi");
+        myTree.insert(3,"bye");
+        Assert.assertEquals(myTree.lookup(3), "bye");
+        myTree.insert(100,"abc");
+        Assert.assertEquals(myTree.lookup(100), "abc");
+        myTree.insert(-100,"abcd");
+        Assert.assertEquals(myTree.lookup(-100), "abcd");
+        Assert.assertEquals("bye", myTree.lookup(3));
+        Assert.assertEquals("abc", myTree.lookup(100));
+        myTree.insert(131,"___");
+        Assert.assertEquals("___", myTree.lookup(131));
+        Assert.assertEquals("bye", myTree.lookup(3));
+        Assert.assertEquals("abc", myTree.lookup(100));
+        //myTree.print();
+        myTree.insert(1,"___");
+        myTree.insert(53,"___");
+        myTree.insert(200,"___");
+        myTree.insert(32,"___");
+        myTree.print();
+        myTree.insert(2,"___");
+        myTree.insert(37,"___");
+        myTree.insert(166,"___");
+        myTree.insert(15,"___");
+        myTree.print();
+        myTree.insert(3,"___");
+        myTree.insert(38,"___");
+        myTree.insert(167,"___");
+        myTree.insert(13,"___");
+        myTree.print();
     }
 }
