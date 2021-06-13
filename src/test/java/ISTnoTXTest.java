@@ -65,25 +65,25 @@ public class ISTnoTXTest {
         Assert.assertEquals("abcd", myTree.lookup(-100));
     }
 
-    //@Test
+    @Test
     public void randomTest(){
         IST<Integer> myTree = new IST<>();
-        Random rand = new Random();
+        Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
         for (int i=0; i<1000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
-        Collections.shuffle(keyList );
-        Collections.shuffle(valueList);
+        Collections.shuffle(keyList, rand);
+        Collections.shuffle(valueList, rand);
 
         for (int i=0; i<1000; i++) {
-            if (valueList.get(i) == 917){
+            if (valueList.get(i) == 506){
                 i = i + 0;
             }
             myTree.insert(keyList.get(i),valueList.get(i));
-
+            System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }
         for (int i=0; i<1000; i++) {

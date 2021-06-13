@@ -22,7 +22,7 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         numOfChildren = childrenList.size();
         children = new ArrayList<ISTNode<V>>(childrenList);
         rebuildFlag = false;
-        keys = new ArrayList<>();
+        keys = new ArrayList<>(numOfChildren -1);
         //children = childrenList; TODO: maybe this is valid and better
 
         for (int i=1; i<childrenList.size(); i++){
@@ -44,7 +44,13 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         numOfChildren = numOfChildrenReceived;
         rebuildFlag = false;
         keys = new ArrayList<>();
-        children = new ArrayList<ISTNode<V>> ();
+        children = new ArrayList<ISTNode<V>> (numOfChildrenReceived);
+        for (int i = 0; i<numOfChildrenReceived;i++){//we need to intitialize all the objects in the list
+            children.add(null);
+            if (i != 1){
+                keys.add(null);
+            }
+        }
     }
 
 }
