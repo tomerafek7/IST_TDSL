@@ -182,7 +182,7 @@ public class IST <V> {
         }
         if (needRebuild(root)) {
             while (true){
-                boolean result = root.activeTX == 0; // = = DCSS(rebuild_flag, 0, 1, active, 0)
+                boolean result = true; // = = DCSS(rebuild_flag, 0, 1, active, 0)
 
                 if (result){
                     root.rebuildFlag = true;
