@@ -34,14 +34,14 @@ public class IST <V> {
         // check estimation:
         // TODO: enhancement: recursive interpolation ?
         if (key < indexKey){
-            // going right in the key list
-            for(int i=index; i>0; i--){
+            // going left in the key list
+            for(int i = index - 1; i >= 0; i--){
                 if (key >= node.keys.get(i)){
                     return i+1; // the +1 is to return the idx in the children list
                 }
             }
         } else if (key >= indexKey) {
-            // going left in the key list
+            // going right in the key list
             for (int i = index + 1; i < numKeys; i++) {
                 if (key < node.keys.get(i)) {
                     return i;
@@ -56,13 +56,15 @@ public class IST <V> {
 
     public V lookup(Integer key){
         ISTNode<V> curNode = root;
-        ArrayList<Pair<ISTNode<V>, Integer>> path = new ArrayList<>(); // TODO: not sure if needed
+        ISTInnerNode<V> parentNode = null;
         // going down the tree
-        while (!(curNode instanceof ISTSingleNode)){
-            // TODO: checkAndHelpRebuild
+        while (true){
+            parentNode = (ISTInnerNode<V>) curNode;
             int idx = interpolate((ISTInnerNode<V>) curNode, key);
-            path.add(new Pair<>(curNode, idx));  // TODO: not sure if needed
             curNode = ((ISTInnerNode<V>) curNode).children.get(idx);
+            if(curNode instanceof ISTSingleNode) break;
+            // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
+            curNode = checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
         }
         // reached a leaf
         // TODO: ReadSet(curNode)
@@ -86,8 +88,8 @@ public class IST <V> {
             path.add(new Pair<>((ISTInnerNode<V>)curNode, idx));
             curNode = ((ISTInnerNode<V>) curNode).children.get(idx);
             if(curNode instanceof ISTSingleNode) break;
-            // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
-            checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
+            // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
+            curNode = checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
         }
         // reached a leaf
         // TODO: ReadSet(curNode)
@@ -141,7 +143,7 @@ public class IST <V> {
             curNode = ((ISTInnerNode<V>) curNode).children.get(idx);
             if(curNode instanceof ISTSingleNode) break;
             // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
-            checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
+            curNode = checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
         }
         // reached a leaf
         // TODO: ReadSet(curNode)
