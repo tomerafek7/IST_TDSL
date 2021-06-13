@@ -20,7 +20,7 @@ public class ISTRebuildObject<V> {
 
     public ISTInnerNode<V> buildIdealISTree(List<ISTSingleNode<V>> KVPairList) {
         int numOfLeaves = KVPairList.size();
-        if (numOfLeaves < MIN_TREE_LEAF_SIZE) {
+        if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
             ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList, numOfLeaves);
             myNode.children = new ArrayList<ISTNode<V>>();
             myNode.children.add(KVPairList.get(0));
@@ -32,14 +32,14 @@ public class ISTRebuildObject<V> {
         ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
-            myNode.children.add(buildIdealISTree(KVPairList.subList(0, size - 1)));
+            myNode.children.add(buildIdealISTree(KVPairList.subList(0, size)));
             if (i != 0) {
                 myNode.keys.add(KVPairList.get(0).key);
                 if (i == 1) myNode.minKey = KVPairList.get(0).key;
                 if (i == numChildren - 1) myNode.maxKey = KVPairList.get(0).key;
 
             }
-            KVPairList = KVPairList.subList(size, KVPairList.size() - 1);
+            KVPairList = KVPairList.subList(size, KVPairList.size());
         }
         return myNode;
 
