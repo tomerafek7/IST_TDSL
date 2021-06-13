@@ -47,7 +47,7 @@ public class ISTRebuildObject<V> {
 
     }
 
-    public ArrayList<ISTSingleNode<V>> createKVPairsList(ArrayList<ISTSingleNode<V>> List,
+    public ArrayList<ISTSingleNode<V>> createKVPairsList(ArrayList<ISTSingleNode<V>> list,
                                                    ISTInnerNode<V> currentNode, int numKeysToSkip, int numKeysToAdd) {
         for (int i = 0; i < currentNode.numOfChildren; i++) {
             ISTNode<V> child = currentNode.children.get(i);
@@ -55,25 +55,23 @@ public class ISTRebuildObject<V> {
                 if (numKeysToSkip > 0) {
                     numKeysToSkip--;
                 } else { //here we found a single node that should be added.
-                    List.add((ISTSingleNode<V>) child);
-                    if (--numKeysToAdd == 0) return List;
+                    list.add((ISTSingleNode<V>) child);
+                    if (--numKeysToAdd == 0) return list;
 
                 }
             } else if (child instanceof ISTInnerNode) { //child is inner node
                 if (numKeysToSkip > ((ISTInnerNode<V>) child).numOfLeaves) {
                     numKeysToSkip -= ((ISTInnerNode<V>) child).numOfLeaves;
-                } else if (numKeysToSkip + numKeysToAdd < ((ISTInnerNode<V>) child).numOfLeaves) { //all of the children are in this subtree
-                    List = createKVPairsList(List, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
-                    return List;
-
+                } else if (numKeysToSkip + numKeysToAdd <= ((ISTInnerNode<V>) child).numOfLeaves) { // all of the children are in this subtree
+                    return createKVPairsList(list, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
                 } else { // some of the children are in the next subtree
-                    List = createKVPairsList(List, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
-                    numKeysToAdd = numKeysToAdd - (((ISTInnerNode<V>) child).numOfLeaves - numKeysToSkip);
+                    list = createKVPairsList(list, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
+                    numKeysToAdd -= ((ISTInnerNode<V>) child).numOfLeaves - numKeysToSkip;
                     numKeysToSkip = 0;
                 }
             }
         }
-        return List;
+        return list;
     }
 
     boolean rebuildAndSetChild (int keyCount,int index) { //keyCount is of the parent node which initiated the rebuild
@@ -84,6 +82,7 @@ public class ISTRebuildObject<V> {
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
+        //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
         ISTInnerNode<V> child = buildIdealISTree(List);
         if (index != 0){
             int key =  List.get(0).key;
@@ -103,7 +102,7 @@ public class ISTRebuildObject<V> {
     void createIdealCollaborative(int keyCount) {
         if (keyCount < COLLABORATION_THRESHOLD) {
             ArrayList<ISTSingleNode<V>> list = new ArrayList<>();
-            list = createKVPairsList(list, oldIstTree,0,keyCount);
+            list = createKVPairsList(list, oldIstTree,0, keyCount);
             newIstTree = buildIdealISTree(list);
         }
         else {

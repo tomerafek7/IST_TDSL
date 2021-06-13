@@ -34,7 +34,8 @@ public class ISTnoTXTest {
         Assert.assertEquals("___", myTree.lookup(131));
         Assert.assertEquals("bye", myTree.lookup(3));
         Assert.assertEquals("abc", myTree.lookup(100));
-        //myTree.print();
+        myTree.print();
+        myTree.checkRep();
     }
 
     @Test
@@ -79,14 +80,54 @@ public class ISTnoTXTest {
         Collections.shuffle(valueList, rand);
 
         for (int i=0; i<1000; i++) {
-            if (valueList.get(i) == 506){
+            if (valueList.get(i) == 56){
                 i = i + 0;
             }
             myTree.insert(keyList.get(i),valueList.get(i));
-            System.out.println(valueList.get(i));
+            //System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }
         for (int i=0; i<1000; i++) {
+            if (valueList.get(i) == 878){
+                i = i + 0;
+            }
+            Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+        }
+
+        for (int i=0; i<1000; i++) {
+            //System.out.println(keyList.get(i));
+            if (keyList.get(i) == 869){
+                i = i + 0;
+            }
+            myTree.remove(keyList.get(i));
+            Assert.assertNull(myTree.lookup(keyList.get(i)));
+        }
+    }
+
+    @Test
+    public void randomTest2(){
+        IST<Integer> myTree = new IST<>();
+        Random rand = new Random(1);
+        List<Integer> keyList = new ArrayList<>();
+        List<Integer> valueList = new ArrayList<>();
+        for (int i=0; i<10000; i++) {
+            keyList.add(i);
+            valueList.add(i);
+        }
+        Collections.shuffle(keyList, rand);
+        Collections.shuffle(valueList, rand);
+
+        for (int i=0; i<10000; i++) {
+            myTree.insert(keyList.get(i),valueList.get(i));
+            //System.out.println(valueList.get(i));
+            Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+        }
+        for (int i=0; i<10000; i++) {
+            Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+        }
+
+        for (int i=0; i<10000; i++) {
+            //System.out.println(keyList.get(i));
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
         }
@@ -114,16 +155,16 @@ public class ISTnoTXTest {
         myTree.insert(53,"___");
         myTree.insert(200,"___");
         myTree.insert(32,"___");
-        myTree.print();
+        //myTree.print();
         myTree.insert(2,"___");
         myTree.insert(37,"___");
         myTree.insert(166,"___");
         myTree.insert(15,"___");
         myTree.insert(3,"___");
-        myTree.print();
+        //myTree.print();
         myTree.insert(38,"___");
         myTree.insert(167,"___");
         myTree.insert(13,"___");
-        myTree.print();
+        //myTree.print();
     }
 }

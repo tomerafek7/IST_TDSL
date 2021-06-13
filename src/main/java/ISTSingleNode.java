@@ -11,6 +11,10 @@ public class ISTSingleNode<V> extends ISTNode<V>{
        this.maxKey = key;
     }
 
+    @Override
+    public String toString() {
+        return key.toString();
+    }
 }
 
 

@@ -16,6 +16,7 @@ public class IST <V> {
         this.root.maxKey = Integer.MAX_VALUE;
         //this.root.keys.add(Integer.MAX_VALUE);
         this.root.children.set(0,new ISTSingleNode<>(0, null, true));
+        this.root.keys.set(0, Integer.MAX_VALUE);
 
     }
 
@@ -175,6 +176,7 @@ public class IST <V> {
         // TODO: add if needed - result = DCSS(p.children[i], node, op, p.status, [0,⊥,⊥])
         if (rebuildRoot.rebuildObject.helpRebuild()){
         }
+        checkRep();
     }
 
     ISTInnerNode<V> checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
@@ -235,6 +237,36 @@ public class IST <V> {
             }
         }
     }
+
+    // check that the tree structure is correct
+    public void checkRep(){
+        _checkRep(root, new ArrayList<>());
+    }
+
+    public void _checkRep(ISTNode<V> curNode, ArrayList<Pair<Integer, String>> path){
+
+        if (curNode instanceof ISTSingleNode){ // validate path
+            Integer key = ((ISTSingleNode<V>) curNode).key;
+            for(Pair<Integer, String> pair: path){
+                if (pair.snd.equals("right")) assert key >= pair.fst : "key: " + key + ", Path: " + path.toString();
+                else if (pair.snd.equals("left")) assert key < pair.fst : "key: " + key + ", Path: " + path.toString();
+            }
+        } else { // inner node
+            ISTInnerNode<V> curNodeInner = (ISTInnerNode<V>) curNode;
+            int i=0;
+            for(ISTNode<V> child: curNodeInner.children){
+                ArrayList<Pair<Integer, String>> newPath = new ArrayList<>(path);
+                if (i==0){
+                    newPath.add(new Pair<>(curNodeInner.keys.get(i), "left"));
+                } else{
+                    newPath.add(new Pair<>(curNodeInner.keys.get(i-1), "right"));
+                }
+                _checkRep(child, newPath);
+                i++;
+            }
+        }
+    }
+
 
 }
 
