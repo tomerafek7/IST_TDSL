@@ -68,7 +68,7 @@ public class ISTnoTXTest {
     @Test
     public void randomTest(){
         IST<Integer> myTree = new IST<>();
-        Random rand = new Random(100);
+        Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
         for (int i=0; i<1000; i++) {
@@ -79,11 +79,11 @@ public class ISTnoTXTest {
         Collections.shuffle(valueList, rand);
 
         for (int i=0; i<1000; i++) {
-            if(keyList.get(i) == 808){
-                int j = 0;
+            if (valueList.get(i) == 506){
+                i = i + 0;
             }
-            System.out.println(keyList.get(i));
             myTree.insert(keyList.get(i),valueList.get(i));
+            System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }
         for (int i=0; i<1000; i++) {

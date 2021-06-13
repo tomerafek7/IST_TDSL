@@ -15,7 +15,8 @@ public class IST <V> {
         this.root.minKey = Integer.MAX_VALUE;
         this.root.maxKey = Integer.MAX_VALUE;
         //this.root.keys.add(Integer.MAX_VALUE);
-        this.root.children.set(0, new ISTSingleNode<>(0, null, true));
+        this.root.children.set(0,new ISTSingleNode<>(0, null, true));
+
     }
 
     public int interpolate(ISTInnerNode<V> node, Integer key){

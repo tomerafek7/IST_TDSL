@@ -34,9 +34,9 @@ public class ISTRebuildObject<V> {
         ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
-            myNode.children.add(buildIdealISTree(KVPairList.subList(0, size)));
+            myNode.children.set(i,buildIdealISTree(KVPairList.subList(0, size)));
             if (i != 0) {
-                myNode.keys.add(KVPairList.get(0).key);
+                myNode.keys.set(i-1, KVPairList.get(0).key);
                 if (i == 1) myNode.minKey = KVPairList.get(0).key;
                 if (i == numChildren - 1) myNode.maxKey = KVPairList.get(0).key;
 
@@ -89,9 +89,14 @@ public class ISTRebuildObject<V> {
             int key =  List.get(0).key;
             // TODO: change here to write set? or need to do it safely since someone might have done it before me
             newIstTree.keys.set(index -1, key);
+            if (index == 1) {
+                newIstTree.minKey = key;
+            } else if(index == totalChildren -1){
+                newIstTree.maxKey = key;
+            }
         }
         //TODO : this should be done in respect of multi threads later.
-        newIstTree.children.set(index,child);
+        newIstTree.children.set(index,child);////////////////
         return true;
     }
 
@@ -162,7 +167,7 @@ public class ISTRebuildObject<V> {
         if (finishedRebuild){
             return false;
         }
-        int keyCount = subTreeCount(parent);
+        int keyCount = subTreeCount(oldIstTree);
         createIdealCollaborative(keyCount);
         parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
         //TODO: add dcss with finished rebuild
