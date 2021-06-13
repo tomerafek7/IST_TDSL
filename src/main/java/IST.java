@@ -7,6 +7,8 @@ public class IST <V> {
 
     ISTInnerNode<V> root;
     final static int INIT_SIZE = 1;
+    double REBUILD_THRESHOLD = 0.25;
+    int MIN_UPDATES_FOR_REBUILD = 10;
 
     IST(){
         this.root = new ISTInnerNode<>(INIT_SIZE);
@@ -14,6 +16,7 @@ public class IST <V> {
         this.root.maxKey = Integer.MAX_VALUE;
         //this.root.keys.add(Integer.MAX_VALUE);
         this.root.children.add(new ISTSingleNode<>(0, null, true));
+
     }
 
     public int interpolate(ISTInnerNode<V> node, Integer key){
@@ -150,6 +153,37 @@ public class IST <V> {
         // TODO:
         // For node in path:
         // FAA(node.rebuild_counter, 1)
+    }
+
+    void rebuild(ISTInnerNode<V> rebuildRoot,ISTInnerNode<V> parent, int index){
+        rebuildRoot.rebuildObject = new ISTRebuildObject<V>(rebuildRoot,index,parent);
+        // TODO: add if needed - result = DCSS(p.children[i], node, op, p.status, [0,⊥,⊥])
+        if (rebuildRoot.rebuildObject.helpRebuild()){
+
+        }
+    }
+    void checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
+        if (root.rebuildFlag) {
+            root.rebuildObject.helpRebuild();
+        }
+        if (needRebuild(root)) {
+            while (true){
+                boolean result = root.activeTX == 0; // = = DCSS(rebuild_flag, 0, 1, active, 0)
+
+                if (result){
+                    root.rebuildFlag = true;
+                    rebuild(root, parent, index);
+                }
+                else if (!result){
+                    root.rebuildObject.helpRebuild();
+                    break;
+                }
+            }
+        }
+
+    }
+    boolean needRebuild(ISTInnerNode<V> root){
+        return (root.updateCount > (root.numOfLeaves * REBUILD_THRESHOLD) && root.updateCount > MIN_UPDATES_FOR_REBUILD);
     }
 
 }

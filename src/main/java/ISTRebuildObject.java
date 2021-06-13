@@ -2,8 +2,17 @@ import java.util.ArrayList;
 import java.lang.Math;
 
 public class ISTRebuildObject<V> {
-    IST<V> oldIstTree;
-    IST<V> newIstTree;
+    ISTInnerNode<V> oldIstTree;
+    ISTInnerNode<V> newIstTree;
+    int index;//TODO: check if needed
+    ISTInnerNode<V> parent;
+
+    ISTRebuildObject(ISTInnerNode<V> oldTree, int indexInParent, ISTInnerNode<V> parentNode){
+        oldIstTree = oldTree;
+        index = indexInParent;
+        parent = parentNode;
+
+    }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
 
@@ -71,37 +80,37 @@ public class ISTRebuildObject<V> {
         int fromKey = childSize * index + Math.min(index,remainder);
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
-        List = createKVPairsList(List, oldIstTree.root,fromKey,childKeyCount);
+        List = createKVPairsList(List, oldIstTree,fromKey,childKeyCount);
         ISTInnerNode<V> child = buildIdealISTree(List);
         if (index != 0){
             int key =  List.get(0).key;
             // TODO: change here to write set? or need to do it safely since someone might have done it before me
-            newIstTree.root.keys.set(index -1, key);
+            newIstTree.keys.set(index -1, key);
         }
         //TODO : this should be done in respect of multi threads later.
-        newIstTree.root.children.set(index,child);
+        newIstTree.children.set(index,child);
         return true;
     }
 
-    void CreateIdealCollaborative(int keyCount) {
+    void createIdealCollaborative(int keyCount) {
         if (keyCount < COLLABORATION_THRESHOLD) {
             ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
-            List = createKVPairsList(List, oldIstTree.root,0,keyCount);
-            newIstTree.root = buildIdealISTree(List);
+            List = createKVPairsList(List, oldIstTree,0,keyCount);
+            newIstTree = buildIdealISTree(List);
         }
         else {
-            newIstTree.root = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)));
+            newIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)));
             //TODO add support in multi threading; if not CAS etc.
         }
        if (keyCount > COLLABORATION_THRESHOLD) {
            while (true) {
-               int index = newIstTree.root.waitQueueIndex ; // TODO: add support - index = READ(newRoot. wait_queue_idx)
-               if (index == newIstTree.root.numOfChildren) break; // each child has a thread working on it;
-               newIstTree.root.waitQueueIndex ++;
+               int index = newIstTree.waitQueueIndex ; // TODO: add support - index = READ(newRoot. wait_queue_idx)
+               if (index == newIstTree.numOfChildren) break; // each child has a thread working on it;
+               newIstTree.waitQueueIndex ++;
                rebuildAndSetChild(keyCount, index); //TODO : add support to multi treading - if CAS(newRoot.wait_queue_idx, index, index + 1) then ...
            }
-           for (int i=0; i<newIstTree.root.numOfChildren; i ++){
-               ISTNode<V> child = newIstTree.root.children.get(i);
+           for (int i=0; i<newIstTree.numOfChildren; i ++){
+               ISTNode<V> child = newIstTree.children.get(i);
                if (child == null) { //can happen only in multi treading- 1 of the threads did not finish
                    if ( ! rebuildAndSetChild(keyCount,i)) {
                        return; //TODO maoras: maybe not needed
@@ -146,5 +155,11 @@ public class ISTRebuildObject<V> {
 
         return keyCount;
     }
-
+    boolean helpRebuild(){
+        int keyCount = subTreeCount(parent);
+        createIdealCollaborative(keyCount);
+        parent.children.set(index,newIstTree);
+        //TODO: add dcss
+        return true;
+    }
 }
