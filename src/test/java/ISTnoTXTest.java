@@ -79,9 +79,10 @@ public class ISTnoTXTest {
         Collections.shuffle(valueList, rand);
 
         for (int i=0; i<1000; i++) {
-            if(keyList.get(i) == 538){
+            if(keyList.get(i) == 808){
                 int j = 0;
             }
+            System.out.println(keyList.get(i));
             myTree.insert(keyList.get(i),valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }

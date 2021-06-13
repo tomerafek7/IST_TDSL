@@ -79,11 +79,11 @@ public class ISTRebuildObject<V> {
     boolean rebuildAndSetChild (int keyCount,int index) { //keyCount is of the parent node which initiated the rebuild
         int totalChildren = (int)Math.floor( Math.sqrt((double)keyCount));
         int childSize = Math.floorDiv(keyCount,totalChildren);
-        int remainder = keyCount %totalChildren;
+        int remainder = keyCount % totalChildren;
         int fromKey = childSize * index + Math.min(index,remainder);
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
-        List = createKVPairsList(List, oldIstTree,fromKey,childKeyCount);
+        List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
         ISTInnerNode<V> child = buildIdealISTree(List);
         if (index != 0){
             int key =  List.get(0).key;

@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ISTInnerNode<V> extends  ISTNode<V>{
+public class ISTInnerNode<V> extends ISTNode<V>{
     int numOfChildren;
     ArrayList<Integer> keys;
     ArrayList<ISTNode<V>> children;
@@ -27,8 +27,8 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
 
         for (int i=1; i<childrenList.size(); i++){
             keys.add(childrenList.get(i).key);
-
         }
+
         minKey = keys.get(0);
         maxKey = keys.get(keys.size()-1);
     }
@@ -45,6 +45,9 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         rebuildFlag = false;
         keys = new ArrayList<>();
         children = new ArrayList<ISTNode<V>> ();
+        for (int i=0; i<numOfChildrenReceived; i++){ // need to initialize the children list to make set(idx,value) work
+            children.add(null);
+        }
     }
 
 }
