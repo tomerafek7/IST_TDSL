@@ -21,7 +21,7 @@ public class ISTRebuildObject<V> {
     public ISTInnerNode<V> buildIdealISTree(List<ISTSingleNode<V>> KVPairList) {
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves < MIN_TREE_LEAF_SIZE) {
-            ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList);
+            ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList, numOfLeaves);
             myNode.children = new ArrayList<ISTNode<V>>();
             myNode.children.add(KVPairList.get(0));
             return myNode;
@@ -29,7 +29,7 @@ public class ISTRebuildObject<V> {
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
         int childSize = (int) Math.floor((((double) numOfLeaves) / numChildren));
         int remainder = numOfLeaves % numChildren;
-        ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren);
+        ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
             myNode.children.add(buildIdealISTree(KVPairList.subList(0, size - 1)));
@@ -95,12 +95,12 @@ public class ISTRebuildObject<V> {
 
     void createIdealCollaborative(int keyCount) {
         if (keyCount < COLLABORATION_THRESHOLD) {
-            ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
-            List = createKVPairsList(List, oldIstTree,0,keyCount);
-            newIstTree = buildIdealISTree(List);
+            ArrayList<ISTSingleNode<V>> list = new ArrayList<>();
+            list = createKVPairsList(list, oldIstTree,0,keyCount);
+            newIstTree = buildIdealISTree(list);
         }
         else {
-            newIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)));
+            newIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)), keyCount);
             //TODO add support in multi threading; if not CAS etc.
         }
        if (keyCount > COLLABORATION_THRESHOLD) {
