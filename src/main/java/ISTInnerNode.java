@@ -12,8 +12,8 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
     boolean rebuildFlag;
     ISTRebuildObject<V> rebuildObject;
 
-    public ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList){
-        numOfLeaves = 0;
+    public ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList, int leaves){
+        numOfLeaves = leaves;
         finishedCount = false;
         updateCount = 0;
         activeTX = 0;
@@ -32,10 +32,10 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
         maxKey = keys.get(keys.size()-1);
     }
 
-    public ISTInnerNode(int numOfChildrenReceived) {
+    public ISTInnerNode(int numOfChildrenReceived, int leaves) {
         minKey = 0;
         maxKey = 0;
-        numOfLeaves = 0;
+        numOfLeaves = leaves;
         finishedCount = false;
         updateCount = 0;
         activeTX = 0;

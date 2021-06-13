@@ -11,7 +11,7 @@ public class IST <V> {
     int MIN_UPDATES_FOR_REBUILD = 10;
 
     IST(){
-        this.root = new ISTInnerNode<>(INIT_SIZE);
+        this.root = new ISTInnerNode<>(INIT_SIZE, 0);
         this.root.minKey = Integer.MAX_VALUE;
         this.root.maxKey = Integer.MAX_VALUE;
         //this.root.keys.add(Integer.MAX_VALUE);
@@ -104,7 +104,7 @@ public class IST <V> {
                     childrenList.add((ISTSingleNode<V>) curNode);
                     childrenList.add(newSingle);
                 }
-                ISTInnerNode<V> newInner = new ISTInnerNode<>(childrenList);
+                ISTInnerNode<V> newInner = new ISTInnerNode<>(childrenList,2);
                 assert parentNode != null;
                 assert idx != -1;
                 parentNode.children.set(idx, newInner); // the last index from the loop is our index TODO: Write Set
@@ -178,6 +178,12 @@ public class IST <V> {
                     root.rebuildObject.helpRebuild();
                     break;
                 }
+            }
+            boolean result = !root.rebuildFlag ;//DCSS(active, NA, ++, rebuild_flag, 0)
+            if (result) {
+                root.activeTX ++;
+                //FAA(root.active_TX, -1);
+
             }
         }
 
