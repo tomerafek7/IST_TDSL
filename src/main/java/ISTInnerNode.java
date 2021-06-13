@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class ISTInnerNode<V> extends  ISTNode<V>{
     int numOfChildren;
@@ -12,7 +13,7 @@ public class ISTInnerNode<V> extends  ISTNode<V>{
     boolean rebuildFlag;
     ISTRebuildObject<V> rebuildObject;
 
-    public ISTInnerNode(ArrayList<ISTSingleNode<V>> childrenList){
+    public ISTInnerNode(List<ISTSingleNode<V>> childrenList){
         numOfLeaves = 0;
         finishedCount = false;
         updateCount = 0;

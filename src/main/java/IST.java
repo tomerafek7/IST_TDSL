@@ -77,15 +77,17 @@ public class IST <V> {
     public void insert(Integer key, V value){
         ISTNode<V> curNode = root;
         ISTInnerNode<V> parentNode = null;
-        ArrayList<Pair<ISTNode<V>, Integer>> path = new ArrayList<>();
+        ArrayList<Pair<ISTInnerNode<V>, Integer>> path = new ArrayList<>();
         int idx = -1;
         // going down the tree
-        while (!(curNode instanceof ISTSingleNode)){
-            parentNode = (ISTInnerNode<V>)curNode;
-            // TODO: checkAndHelpRebuild
+        while (true) {
+            parentNode = (ISTInnerNode<V>) curNode;
             idx = interpolate((ISTInnerNode<V>) curNode, key);
-            path.add(new Pair<>(curNode, idx));
+            path.add(new Pair<>((ISTInnerNode<V>)curNode, idx));
             curNode = ((ISTInnerNode<V>) curNode).children.get(idx);
+            if(curNode instanceof ISTSingleNode) break;
+            // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
+            checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
         }
         // reached a leaf
         // TODO: ReadSet(curNode)
@@ -116,24 +118,30 @@ public class IST <V> {
             // TODO: Write Set
         }
 
-        // TODO:
-        // For node in path:
-        // FAA(node.rebuild_counter, 1)
+        // increment updates counters
+        for (Pair<ISTInnerNode<V>, Integer> pair: path){
+            pair.fst.updateCount++;
+            // TODO:
+            // For node in path:
+            // FAA(node.rebuild_counter, 1)
+        }
 
     }
 
     public void remove(Integer key){
         ISTNode<V> curNode = root;
         ISTInnerNode<V> parentNode = null;
-        ArrayList<Pair<ISTNode<V>, Integer>> path = new ArrayList<>();
+        ArrayList<Pair<ISTInnerNode<V>, Integer>> path = new ArrayList<>();
         int idx = -1;
         // going down the tree
-        while (!(curNode instanceof ISTSingleNode)){
+        while (true){
             parentNode = (ISTInnerNode<V>)curNode;
-            // TODO: checkAndHelpRebuild
             idx = interpolate((ISTInnerNode<V>) curNode, key);
-            path.add(new Pair<>(curNode, idx));
+            path.add(new Pair<>((ISTInnerNode<V>)curNode, idx));
             curNode = ((ISTInnerNode<V>) curNode).children.get(idx);
+            if(curNode instanceof ISTSingleNode) break;
+            // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
+            checkAndHelpRebuild((ISTInnerNode<V>)curNode, parentNode, idx);
         }
         // reached a leaf
         // TODO: ReadSet(curNode)
@@ -150,18 +158,23 @@ public class IST <V> {
             assert(false);
         }
 
-        // TODO:
-        // For node in path:
-        // FAA(node.rebuild_counter, 1)
+        // increment updates counters
+        for (Pair<ISTInnerNode<V>, Integer> pair: path){
+            pair.fst.updateCount++;
+            // TODO:
+            // For node in path:
+            // FAA(node.rebuild_counter, 1)
+        }
+
     }
 
     void rebuild(ISTInnerNode<V> rebuildRoot,ISTInnerNode<V> parent, int index){
         rebuildRoot.rebuildObject = new ISTRebuildObject<V>(rebuildRoot,index,parent);
         // TODO: add if needed - result = DCSS(p.children[i], node, op, p.status, [0,⊥,⊥])
         if (rebuildRoot.rebuildObject.helpRebuild()){
-
         }
     }
+
     void checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
         if (root.rebuildFlag) {
             root.rebuildObject.helpRebuild();
@@ -182,8 +195,9 @@ public class IST <V> {
         }
 
     }
-    boolean needRebuild(ISTInnerNode<V> root){
-        return (root.updateCount > (root.numOfLeaves * REBUILD_THRESHOLD) && root.updateCount > MIN_UPDATES_FOR_REBUILD);
+
+    boolean needRebuild(ISTInnerNode<V> node){
+        return (node.updateCount > (node.numOfLeaves * REBUILD_THRESHOLD) && node.updateCount > MIN_UPDATES_FOR_REBUILD);
     }
 
     public void print(){

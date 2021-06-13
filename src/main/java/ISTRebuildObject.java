@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.lang.Math;
+import java.util.List;
 
 public class ISTRebuildObject<V> {
     ISTInnerNode<V> oldIstTree;
@@ -17,7 +18,7 @@ public class ISTRebuildObject<V> {
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
 
 
-    public ISTInnerNode<V> buildIdealISTree(ArrayList<ISTSingleNode<V>> KVPairList) {
+    public ISTInnerNode<V> buildIdealISTree(List<ISTSingleNode<V>> KVPairList) {
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves < MIN_TREE_LEAF_SIZE) {
             ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList);
@@ -25,20 +26,20 @@ public class ISTRebuildObject<V> {
             myNode.children.add(KVPairList.get(0));
             return myNode;
         }
-        int numChildren = (int) Math.ceil(Math.sqrt(numOfLeaves));
+        int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
         int childSize = (int) Math.floor((((double) numOfLeaves) / numChildren));
         int remainder = numOfLeaves % numChildren;
         ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
-            myNode.children.add(buildIdealISTree((ArrayList<ISTSingleNode<V>>) KVPairList.subList(0, size - 1)));
+            myNode.children.add(buildIdealISTree(KVPairList.subList(0, size - 1)));
             if (i != 0) {
                 myNode.keys.add(KVPairList.get(0).key);
                 if (i == 1) myNode.minKey = KVPairList.get(0).key;
                 if (i == numChildren - 1) myNode.maxKey = KVPairList.get(0).key;
 
             }
-            KVPairList = (ArrayList<ISTSingleNode<V>>) KVPairList.subList(size, KVPairList.size() - 1);
+            KVPairList = KVPairList.subList(size, KVPairList.size() - 1);
         }
         return myNode;
 
