@@ -24,8 +24,8 @@ public class ISTRebuildObject<V> {
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
             ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList, numOfLeaves);
-            myNode.children = new ArrayList<ISTNode<V>>();
-            myNode.children.add(KVPairList.get(0));
+//            myNode.children = new ArrayList<ISTNode<V>>();
+//            myNode.children.add(KVPairList.get(0));
             return myNode;
         }
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));

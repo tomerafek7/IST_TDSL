@@ -115,8 +115,8 @@ public class ISTnoTXTest {
         myTree.insert(37,"___");
         myTree.insert(166,"___");
         myTree.insert(15,"___");
-        myTree.print();
         myTree.insert(3,"___");
+        myTree.print();
         myTree.insert(38,"___");
         myTree.insert(167,"___");
         myTree.insert(13,"___");
