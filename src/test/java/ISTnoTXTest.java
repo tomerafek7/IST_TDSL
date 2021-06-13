@@ -75,11 +75,15 @@ public class ISTnoTXTest {
             keyList.add(i);
             valueList.add(i);
         }
-        Collections.shuffle(keyList);
+        Collections.shuffle(keyList );
         Collections.shuffle(valueList);
 
         for (int i=0; i<1000; i++) {
+            if (valueList.get(i) == 917){
+                i = i + 0;
+            }
             myTree.insert(keyList.get(i),valueList.get(i));
+
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }
         for (int i=0; i<1000; i++) {
