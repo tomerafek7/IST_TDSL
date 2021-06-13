@@ -7,11 +7,13 @@ public class ISTRebuildObject<V> {
     ISTInnerNode<V> newIstTree;
     int index;//TODO: check if needed
     ISTInnerNode<V> parent;
+    boolean finishedRebuild;
 
     ISTRebuildObject(ISTInnerNode<V> oldTree, int indexInParent, ISTInnerNode<V> parentNode){
         oldIstTree = oldTree;
         index = indexInParent;
         parent = parentNode;
+        finishedRebuild = false;
 
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
@@ -157,10 +159,13 @@ public class ISTRebuildObject<V> {
         return keyCount;
     }
     boolean helpRebuild(){
+        if (finishedRebuild){
+            return false;
+        }
         int keyCount = subTreeCount(parent);
         createIdealCollaborative(keyCount);
-        parent.children.set(index,newIstTree);
-        //TODO: add dcss
+        parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+        //TODO: add dcss with finished rebuild
         return true;
     }
 }

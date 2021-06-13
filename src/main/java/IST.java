@@ -175,9 +175,10 @@ public class IST <V> {
         }
     }
 
-    void checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
+    ISTInnerNode<V> checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
         if (root.rebuildFlag) {
             root.rebuildObject.helpRebuild();
+            return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
         }
         if (needRebuild(root)) {
             while (true){
@@ -186,18 +187,23 @@ public class IST <V> {
                 if (result){
                     root.rebuildFlag = true;
                     rebuild(root, parent, index);
+                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
                 }
                 else if (!result){
                     root.rebuildObject.helpRebuild();
-                    break;
+                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
                 }
             }
-            boolean result = !root.rebuildFlag ;//DCSS(active, NA, ++, rebuild_flag, 0)
-            if (result) {
-                root.activeTX ++;
-                //FAA(root.active_TX, -1);
+        }
 
-            }
+        boolean result = !root.rebuildFlag ;//DCSS(active, NA, ++, rebuild_flag, 0)
+        if (result) {
+            root.activeTX ++;
+            return root;
+            //FAA(root.active_TX, -1);
+        }
+        else {
+            return checkAndHelpRebuild(root,parent,index);
         }
 
     }
