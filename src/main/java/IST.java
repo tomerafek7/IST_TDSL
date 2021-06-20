@@ -1,5 +1,5 @@
 import com.sun.tools.javac.util.Pair;
-
+import sun.misc.Unsafe;
 import java.util.ArrayList;
 
 public class IST {
@@ -8,6 +8,7 @@ public class IST {
     final static int INIT_SIZE = 1;
     double REBUILD_THRESHOLD = 0.25;
     int MIN_UPDATES_FOR_REBUILD = 10;
+    static final boolean DEBUG_MODE = true;
 
     IST(){
         this.root = new ISTInnerNode(INIT_SIZE, 0);
@@ -180,48 +181,39 @@ public class IST {
         checkRep();
     }
 
-    ISTInnerNode checkAndHelpRebuild(ISTInnerNode root, ISTInnerNode parent, int index){
+    ISTInnerNode checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
         LocalStorage localStorage = TX.lStorage.get();
-        if (root.rebuildFlag) {
-            root.rebuildObject.helpRebuild();
-            return checkAndHelpRebuild((ISTInnerNode) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
+        if (root.activeTX.get() == -1) { // if (rebuild_flag)
+
+           // root.rebuildObject.helpRebuild();
+            return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
-            while (true){
-                boolean result = true; // = = DCSS(rebuild_flag, 0, 1, active, 0) OR CAS(active,0,-1)
-
+            boolean result = false;
+            while (root.activeTX.get() != -1) {// we wait for all transactions in sub-tree to be over and than reubild should catch the sub-tree
+                result = root.activeTX.compareAndSet(0, -1);
+            }
                 if (result){
-                    root.rebuildFlag = true;
-                    rebuild(root, parent, index);
+                    rebuild(root, parent, index); // we "catched" the rebuild first.
                     return checkAndHelpRebuild((ISTInnerNode) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
-                else if (!result){
-                    root.rebuildObject.helpRebuild();
+                else {
+                    //root.rebuildObject.helpRebuild();
                     return checkAndHelpRebuild((ISTInnerNode) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
-            }
+
         }
 
-        boolean result = !root.rebuildFlag ;//DCSS(active, NA, ++, rebuild_flag, 0)
-        /*
         while(true){
-            active = root.activeTX;
-            if(active == -1){
+            int active = root.activeTX.get();
+            boolean result = false;
+            if(active == -1){ // rebuild started, go help
                 return checkAndHelpRebuild(root,parent,index);
-            } else{
-                res = CAS(root.activeTX, active, active+1);
-                if (res == active+1) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
+            } else{ // try to inc the active counter
+                result = root.activeTX.compareAndSet(active, active+1);
+                localStorage.decActiveList.add(root);
+                if (result) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
             }
-        }
-        */
-
-        if (result) {
-            root.activeTX ++;
-            return root; // return the updated sub-tree root, so the operation will continue with the updated tree
-            //FAA(root.active_TX, -1);
-        }
-        else {
-            return checkAndHelpRebuild(root,parent,index);
         }
 
     }
