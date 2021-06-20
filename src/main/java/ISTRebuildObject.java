@@ -171,6 +171,10 @@ public class ISTRebuildObject<V> {
         parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
         //TODO: add dcss with finished rebuild
         // TODO: is CAS enough here?
+        if (IST.DEBUG_MODE){
+          //  IST.debugPrintNumLeaves(newIstTree);
+
+        }
         return true;
     }
 }

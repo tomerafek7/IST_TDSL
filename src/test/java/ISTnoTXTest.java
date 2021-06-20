@@ -121,6 +121,9 @@ public class ISTnoTXTest {
             myTree.insert(keyList.get(i),valueList.get(i));
             //System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+            if (i%1000 == 0 && i!=0) {
+                IST.debugPrintNumLeaves(myTree.root.children.get(0));
+            }
         }
         for (int i=0; i<10000; i++) {
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
@@ -130,6 +133,9 @@ public class ISTnoTXTest {
             //System.out.println(keyList.get(i));
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
+            if (i%1000 == 0 && i!=0) {
+                IST.debugPrintNumLeaves(myTree.root.children.get(0));
+            }
         }
     }
 

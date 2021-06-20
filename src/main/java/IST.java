@@ -8,6 +8,7 @@ public class IST <V> {
     final static int INIT_SIZE = 1;
     double REBUILD_THRESHOLD = 0.25;
     int MIN_UPDATES_FOR_REBUILD = 10;
+    static final boolean DEBUG_MODE = true;
 
     IST(){
         this.root = new ISTInnerNode<>(INIT_SIZE, 0);
