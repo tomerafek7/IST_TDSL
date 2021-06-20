@@ -1,5 +1,4 @@
 import com.sun.tools.javac.util.Pair;
-import org.junit.function.ThrowingRunnable;
 
 import java.util.ArrayList;
 
@@ -264,6 +263,36 @@ public class IST <V> {
                 _checkRep(child, newPath);
                 i++;
             }
+        }
+    }
+
+    public static <V> int debugSubTreeCount(ISTNode<V> curNode){
+
+        if (curNode instanceof ISTSingleNode){
+            return ((ISTSingleNode<V>) curNode).isEmpty ? 0 : 1;
+        }
+        // here node is inner
+        ISTInnerNode<V> innerCurNode = (ISTInnerNode<V>)curNode;
+        int keyCount = 0;
+        for (ISTNode<V> child : innerCurNode.children){
+            if (child instanceof ISTSingleNode){
+                keyCount += ((ISTSingleNode<V>) child).isEmpty ? 0 : 1;
+            } else { // inner
+                ISTInnerNode<V> innerChild = (ISTInnerNode<V>)child;
+                keyCount += IST.debugSubTreeCount(child);
+            }
+        }
+        innerCurNode.debugNumOfLeaves = keyCount;
+
+        return keyCount;
+    }
+
+    public static <V> void debugPrintNumLeaves (ISTNode<V> curNode) {
+        IST.debugSubTreeCount(curNode); // update debugNumOfLeaves field for all nodes in subtree
+        // now, print only the desired data: (subtree root + sons)
+        System.out.println("SubTree root # Leaves is: " + ((ISTInnerNode<V>) curNode).debugNumOfLeaves);
+        for (int i = 0; i < ((ISTInnerNode<V>) curNode).numOfChildren; i++) {
+            System.out.println("Son #" + i + " # Leaves is: " + ((ISTInnerNode<V>) ((ISTInnerNode<V>) curNode).children.get(i)).debugNumOfLeaves);
         }
     }
 

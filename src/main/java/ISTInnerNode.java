@@ -12,6 +12,8 @@ public class ISTInnerNode<V> extends ISTNode<V>{
     boolean finishedCount; // used only in rebuild
     boolean rebuildFlag;
     ISTRebuildObject<V> rebuildObject;
+    int debugNumOfLeaves; // used only in debug
+
 
     public ISTInnerNode(List<ISTSingleNode<V>> childrenList, int leaves){
         numOfLeaves = 0;
@@ -22,6 +24,7 @@ public class ISTInnerNode<V> extends ISTNode<V>{
         numOfChildren = childrenList.size();
         children = new ArrayList<ISTNode<V>>(childrenList);
         rebuildFlag = false;
+        debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
         //children = childrenList; TODO: maybe this is valid and better
 
@@ -43,6 +46,7 @@ public class ISTInnerNode<V> extends ISTNode<V>{
         waitQueueIndex = 0;
         numOfChildren = numOfChildrenReceived;
         rebuildFlag = false;
+        debugNumOfLeaves = 0;
         keys = new ArrayList<>();
         children = new ArrayList<ISTNode<V>> (numOfChildrenReceived);
         for (int i = 0; i<numOfChildrenReceived;i++){//we need to intitialize all the objects in the list
