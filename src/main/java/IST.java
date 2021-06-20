@@ -181,12 +181,12 @@ public class IST {
         checkRep();
     }
 
-    ISTInnerNode checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
+    ISTInnerNode checkAndHelpRebuild(ISTInnerNode root, ISTInnerNode parent, int index){
         LocalStorage localStorage = TX.lStorage.get();
         if (root.activeTX.get() == -1) { // if (rebuild_flag)
 
            // root.rebuildObject.helpRebuild();
-            return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
+            return checkAndHelpRebuild((ISTInnerNode) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
             boolean result = false;

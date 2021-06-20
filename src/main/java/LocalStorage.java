@@ -45,26 +45,26 @@ public class LocalStorage {
         ISTWriteSet.put(node, we);
     }
 
-    protected ISTNode ISTPutIntoReadSet(ISTNode node) {
-        if(node.getVersion() > readVersion){ // abort immediately
-            TXLibExceptions excep = new TXLibExceptions();
-            throw excep.new AbortException();
-        }
-        ISTReadSet.add(node);
-        if(ISTWriteSet.containsKey(node)){
-            ISTWriteElement we = ISTWriteSet.get(node);
-            ISTNode updatedNode;
-            if (we.isLeaf){
-                updatedNode = new ISTSingleNode(we.key, we.val, we.isEmpty);
-            } else {
-                ISTInnerNode parent = (ISTInnerNode)entry.getKey();
-                parent.children.set(we.index, we.son);
-            }
-            return updatedNode;
-        } else{
-            return node;
-        }
-    }
+//    protected ISTNode ISTPutIntoReadSet(ISTNode node) {
+//        if(node.getVersion() > readVersion){ // abort immediately
+//            TXLibExceptions excep = new TXLibExceptions();
+//            throw excep.new AbortException();
+//        }
+//        ISTReadSet.add(node);
+//        if(ISTWriteSet.containsKey(node)){
+//            ISTWriteElement we = ISTWriteSet.get(node);
+//            ISTNode updatedNode;
+//            if (we.isLeaf){
+//                updatedNode = new ISTSingleNode(we.key, we.val, we.isEmpty);
+//            } else {
+//                ISTInnerNode parent = (ISTInnerNode)entry.getKey();
+//                parent.children.set(we.index, we.son);
+//            }
+//            return updatedNode;
+//        } else{
+//            return node;
+//        }
+//    }
 
     protected void addToIndexAdd(LinkedList list, LNode node) {
         ArrayList<LNode> nodes = indexAdd.get(list);
