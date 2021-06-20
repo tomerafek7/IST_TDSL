@@ -1,19 +1,27 @@
 import java.util.ArrayList;
 import java.lang.Math;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ISTRebuildObject<V> {
     ISTInnerNode<V> oldIstTree;
+    AtomicReference<ISTInnerNode<V>>newIstTreeReference;
     ISTInnerNode<V> newIstTree;
     int index;//TODO: check if needed
     ISTInnerNode<V> parent;
     boolean finishedRebuild;
+    ReentrantLock lock;
+
 
     ISTRebuildObject(ISTInnerNode<V> oldTree, int indexInParent, ISTInnerNode<V> parentNode){
         oldIstTree = oldTree;
         index = indexInParent;
         parent = parentNode;
         finishedRebuild = false;
+        newIstTreeReference = null;
+        newIstTree = null;
+        ReentrantLock lock = new ReentrantLock();
 
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
@@ -74,7 +82,7 @@ public class ISTRebuildObject<V> {
         return list;
     }
 
-    boolean rebuildAndSetChild (int keyCount,int index) { //keyCount is of the parent node which initiated the rebuild
+    boolean rebuildAndSetChild (int keyCount,int index, ReentrantLock lock) { //keyCount is of the parent node which initiated the rebuild
         int totalChildren = (int)Math.floor( Math.sqrt((double)keyCount));
         int childSize = Math.floorDiv(keyCount,totalChildren);
         int remainder = keyCount % totalChildren;
@@ -86,7 +94,6 @@ public class ISTRebuildObject<V> {
         ISTInnerNode<V> child = buildIdealISTree(List);
         if (index != 0){
             int key =  List.get(0).key;
-            // TODO: change here to write set? or need to do it safely since someone might have done it before me
             newIstTree.keys.set(index -1, key);
             if (index == 1) {
                 newIstTree.minKey = key;
@@ -94,32 +101,42 @@ public class ISTRebuildObject<V> {
                 newIstTree.maxKey = key;
             }
         }
-        //TODO : this should be done in respect of multi threads later.
-        newIstTree.children.set(index,child);////////////////
+        //TODO: might be a rebuild above us, can optimize
+        if (lock.tryLock()) { // if someone else caught the lock this rebuilt sub tree is no longer necessary
+            if (newIstTree.children.get(index) == null) {// TODO first : compare this with AtomicReference
+                newIstTree.children.set(index, child);
+            }
+            lock.unlock();
+        }
         return true;
     }
 
     void createIdealCollaborative(int keyCount) {
+        ISTInnerNode<V> tempNewIstTree;
         if (keyCount < COLLABORATION_THRESHOLD) {
             ArrayList<ISTSingleNode<V>> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
-            newIstTree = buildIdealISTree(list);
+            tempNewIstTree = buildIdealISTree(list);
         }
         else {
-            newIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)), keyCount);
-            //TODO add support in multi threading; if not CAS etc.
+            tempNewIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)), keyCount);
         }
+        newIstTreeReference.compareAndSet(null,tempNewIstTree);
+        newIstTree = newIstTreeReference.get();
+
+
        if (keyCount > COLLABORATION_THRESHOLD) {
+           ArrayList<ReentrantLock> locks= new ArrayList<>(index);
            while (true) {
-               int index = newIstTree.waitQueueIndex ; // TODO: add support - index = READ(newRoot. wait_queue_idx)
+               int index = newIstTree.waitQueueIndex.getAndIncrement() ;
                if (index == newIstTree.numOfChildren) break; // each child has a thread working on it;
-               newIstTree.waitQueueIndex ++;
-               rebuildAndSetChild(keyCount, index); //TODO : add support to multi treading - if CAS(newRoot.wait_queue_idx, index, index + 1) then ...
+               locks.set(index, new ReentrantLock());
+               rebuildAndSetChild(keyCount, index, locks.get(index));
            }
            for (int i=0; i<newIstTree.numOfChildren; i ++){
                ISTNode<V> child = newIstTree.children.get(i);
                if (child == null) { //can happen only in multi treading- 1 of the threads did not finish
-                   if ( ! rebuildAndSetChild(keyCount,i)) {
+                   if ( ! rebuildAndSetChild(keyCount,i, locks.get(i))) {
                        return; //TODO maoras: maybe not needed
                    }
                }
@@ -137,7 +154,7 @@ public class ISTRebuildObject<V> {
         ISTInnerNode<V> innerCurNode = (ISTInnerNode<V>)curNode;
         if (innerCurNode.numOfChildren > COLLABORATION_THRESHOLD) {
             while (true) { // work queue
-                int index = innerCurNode.waitQueueIndex++; // TODO: fetch-and-add
+                int index = innerCurNode.waitQueueIndex.getAndIncrement();
                 if (index >= innerCurNode.numOfChildren) break;
                 subTreeCount(innerCurNode.children.get(index));
             }
@@ -148,10 +165,11 @@ public class ISTRebuildObject<V> {
                 keyCount += ((ISTSingleNode<V>) child).isEmpty ? 0 : 1;
             } else { // inner
                 ISTInnerNode<V> innerChild = (ISTInnerNode<V>)child;
-                int count = innerChild.numOfLeaves; // TODO: need to read count & finished atomically!
+                //TODO: maor: i think we're good enough here, need to verify
+                // TODO: need to read count & finished atomically!
                 boolean finished = innerChild.finishedCount;
                 if(finished) {
-                    keyCount += count;
+                    keyCount += innerChild.numOfLeaves;
                 } else{
                   keyCount += subTreeCount(child);
                 }
@@ -168,9 +186,12 @@ public class ISTRebuildObject<V> {
         }
         int keyCount = subTreeCount(oldIstTree);
         createIdealCollaborative(keyCount);
-        parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
-        //TODO: add dcss with finished rebuild
-        // TODO: is CAS enough here?
+        if (lock.tryLock()){
+            if (parent.children.get(index) == oldIstTree) {
+                parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+            }
+            lock.unlock();
+        }
         if (IST.DEBUG_MODE){
           //  IST.debugPrintNumLeaves(newIstTree);
 
