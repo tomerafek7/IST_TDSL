@@ -2,14 +2,14 @@ import java.util.ArrayList;
 import java.lang.Math;
 import java.util.List;
 
-public class ISTRebuildObject<V> {
-    ISTInnerNode<V> oldIstTree;
-    ISTInnerNode<V> newIstTree;
+public class ISTRebuildObject {
+    ISTInnerNode oldIstTree;
+    ISTInnerNode newIstTree;
     int index;//TODO: check if needed
-    ISTInnerNode<V> parent;
+    ISTInnerNode parent;
     boolean finishedRebuild;
 
-    ISTRebuildObject(ISTInnerNode<V> oldTree, int indexInParent, ISTInnerNode<V> parentNode){
+    ISTRebuildObject(ISTInnerNode oldTree, int indexInParent, ISTInnerNode parentNode){
         oldIstTree = oldTree;
         index = indexInParent;
         parent = parentNode;
@@ -20,18 +20,18 @@ public class ISTRebuildObject<V> {
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
 
 
-    public ISTInnerNode<V> buildIdealISTree(List<ISTSingleNode<V>> KVPairList) {
+    public ISTInnerNode buildIdealISTree(List<ISTSingleNode> KVPairList) {
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
-            ISTInnerNode<V> myNode = new ISTInnerNode<V>(KVPairList, numOfLeaves);
-//            myNode.children = new ArrayList<ISTNode<V>>();
+            ISTInnerNode myNode = new ISTInnerNode(KVPairList, numOfLeaves);
+//            myNode.children = new ArrayList<ISTNode>();
 //            myNode.children.add(KVPairList.get(0));
             return myNode;
         }
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
         int childSize = (int) Math.floor((((double) numOfLeaves) / numChildren));
         int remainder = numOfLeaves % numChildren;
-        ISTInnerNode<V> myNode = new ISTInnerNode<V>(numChildren, numOfLeaves);
+        ISTInnerNode myNode = new ISTInnerNode(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
             myNode.children.set(i,buildIdealISTree(KVPairList.subList(0, size)));
@@ -47,26 +47,26 @@ public class ISTRebuildObject<V> {
 
     }
 
-    public ArrayList<ISTSingleNode<V>> createKVPairsList(ArrayList<ISTSingleNode<V>> list,
-                                                   ISTInnerNode<V> currentNode, int numKeysToSkip, int numKeysToAdd) {
+    public ArrayList<ISTSingleNode> createKVPairsList(ArrayList<ISTSingleNode> list,
+                                                   ISTInnerNode currentNode, int numKeysToSkip, int numKeysToAdd) {
         for (int i = 0; i < currentNode.numOfChildren; i++) {
-            ISTNode<V> child = currentNode.children.get(i);
-            if (child instanceof ISTSingleNode && (!((ISTSingleNode<V>) child).isEmpty)) {
+            ISTNode child = currentNode.children.get(i);
+            if (child instanceof ISTSingleNode && (!((ISTSingleNode) child).isEmpty)) {
                 if (numKeysToSkip > 0) {
                     numKeysToSkip--;
                 } else { //here we found a single node that should be added.
-                    list.add((ISTSingleNode<V>) child);
+                    list.add((ISTSingleNode) child);
                     if (--numKeysToAdd == 0) return list;
 
                 }
             } else if (child instanceof ISTInnerNode) { //child is inner node
-                if (numKeysToSkip > ((ISTInnerNode<V>) child).numOfLeaves) {
-                    numKeysToSkip -= ((ISTInnerNode<V>) child).numOfLeaves;
-                } else if (numKeysToSkip + numKeysToAdd <= ((ISTInnerNode<V>) child).numOfLeaves) { // all of the children are in this subtree
-                    return createKVPairsList(list, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
+                if (numKeysToSkip > ((ISTInnerNode) child).numOfLeaves) {
+                    numKeysToSkip -= ((ISTInnerNode) child).numOfLeaves;
+                } else if (numKeysToSkip + numKeysToAdd <= ((ISTInnerNode) child).numOfLeaves) { // all of the children are in this subtree
+                    return createKVPairsList(list, ((ISTInnerNode) child), numKeysToSkip, numKeysToAdd);
                 } else { // some of the children are in the next subtree
-                    list = createKVPairsList(list, ((ISTInnerNode<V>) child), numKeysToSkip, numKeysToAdd);
-                    numKeysToAdd -= ((ISTInnerNode<V>) child).numOfLeaves - numKeysToSkip;
+                    list = createKVPairsList(list, ((ISTInnerNode) child), numKeysToSkip, numKeysToAdd);
+                    numKeysToAdd -= ((ISTInnerNode) child).numOfLeaves - numKeysToSkip;
                     numKeysToSkip = 0;
                 }
             }
@@ -80,10 +80,10 @@ public class ISTRebuildObject<V> {
         int remainder = keyCount % totalChildren;
         int fromKey = childSize * index + Math.min(index,remainder);
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
-        ArrayList<ISTSingleNode<V>> List = new ArrayList<>();
+        ArrayList<ISTSingleNode> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
         //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
-        ISTInnerNode<V> child = buildIdealISTree(List);
+        ISTInnerNode child = buildIdealISTree(List);
         if (index != 0){
             int key =  List.get(0).key;
             // TODO: change here to write set? or need to do it safely since someone might have done it before me
@@ -101,12 +101,12 @@ public class ISTRebuildObject<V> {
 
     void createIdealCollaborative(int keyCount) {
         if (keyCount < COLLABORATION_THRESHOLD) {
-            ArrayList<ISTSingleNode<V>> list = new ArrayList<>();
+            ArrayList<ISTSingleNode> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
             newIstTree = buildIdealISTree(list);
         }
         else {
-            newIstTree = new ISTInnerNode<V>((int)Math.floor(Math.sqrt((double) keyCount)), keyCount);
+            newIstTree = new ISTInnerNode((int)Math.floor(Math.sqrt((double) keyCount)), keyCount);
             //TODO add support in multi threading; if not CAS etc.
         }
        if (keyCount > COLLABORATION_THRESHOLD) {
@@ -117,7 +117,7 @@ public class ISTRebuildObject<V> {
                rebuildAndSetChild(keyCount, index); //TODO : add support to multi treading - if CAS(newRoot.wait_queue_idx, index, index + 1) then ...
            }
            for (int i=0; i<newIstTree.numOfChildren; i ++){
-               ISTNode<V> child = newIstTree.children.get(i);
+               ISTNode child = newIstTree.children.get(i);
                if (child == null) { //can happen only in multi treading- 1 of the threads did not finish
                    if ( ! rebuildAndSetChild(keyCount,i)) {
                        return; //TODO maoras: maybe not needed
@@ -128,13 +128,13 @@ public class ISTRebuildObject<V> {
 
     }
 
-    public int subTreeCount(ISTNode<V> curNode){
+    public int subTreeCount(ISTNode curNode){
 
         if (curNode instanceof ISTSingleNode){
-            return ((ISTSingleNode<V>) curNode).isEmpty ? 0 : 1;
+            return ((ISTSingleNode) curNode).isEmpty ? 0 : 1;
         }
         // here node is inner
-        ISTInnerNode<V> innerCurNode = (ISTInnerNode<V>)curNode;
+        ISTInnerNode innerCurNode = (ISTInnerNode)curNode;
         if (innerCurNode.numOfChildren > COLLABORATION_THRESHOLD) {
             while (true) { // work queue
                 int index = innerCurNode.waitQueueIndex++; // TODO: fetch-and-add
@@ -143,11 +143,11 @@ public class ISTRebuildObject<V> {
             }
         }
         int keyCount = 0;
-        for (ISTNode<V> child : innerCurNode.children){
+        for (ISTNode child : innerCurNode.children){
             if (child instanceof ISTSingleNode){
-                keyCount += ((ISTSingleNode<V>) child).isEmpty ? 0 : 1;
+                keyCount += ((ISTSingleNode) child).isEmpty ? 0 : 1;
             } else { // inner
-                ISTInnerNode<V> innerChild = (ISTInnerNode<V>)child;
+                ISTInnerNode innerChild = (ISTInnerNode)child;
                 int count = innerChild.numOfLeaves; // TODO: need to read count & finished atomically!
                 boolean finished = innerChild.finishedCount;
                 if(finished) {

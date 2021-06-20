@@ -12,14 +12,14 @@ public class ISTnoTXTest {
 
     @Test
     public void testCreation(){
-        IST<String> myTree = new IST<>();
+        IST myTree = new IST();
         Assert.assertNotNull(myTree.root);
-        Assert.assertTrue(((ISTSingleNode<String>) myTree.root.children.get(0)).isEmpty);
+        Assert.assertTrue(((ISTSingleNode) myTree.root.children.get(0)).isEmpty);
     }
 
     @Test
     public void testInsert(){
-        IST<String> myTree = new IST<>();
+        IST myTree = new IST();
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");
@@ -40,7 +40,7 @@ public class ISTnoTXTest {
 
     @Test
     public void testRemove() {
-        IST<String> myTree = new IST<>();
+        IST myTree = new IST();
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");
@@ -68,7 +68,7 @@ public class ISTnoTXTest {
 
     @Test
     public void randomTest(){
-        IST<Integer> myTree = new IST<>();
+        IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -106,7 +106,7 @@ public class ISTnoTXTest {
 
     @Test
     public void randomTest2(){
-        IST<Integer> myTree = new IST<>();
+        IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -135,7 +135,7 @@ public class ISTnoTXTest {
 
     @Test
     public void testRebuild(){
-        IST<String> myTree = new IST<>();
+        IST myTree = new IST();
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");

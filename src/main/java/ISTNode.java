@@ -1,7 +1,51 @@
+import java.util.concurrent.atomic.AtomicLong;
 
-public class ISTNode<V> {
-    Integer minKey; //minKey in the keys of the node ONLY
-    Integer maxKey; //maxKey in the keys of the node ONLY
+public class ISTNode {
+    Integer minKey; // minKey in the keys of the node ONLY
+    Integer maxKey; // maxKey in the keys of the node ONLY
+    // lock & version parameters: (copied from LNode)
+    private static final long lockMask = 0x1000000000000000L;
+    private static final long deleteMask = 0x2000000000000000L;
+    private static final long singletonMask = 0x4000000000000000L;
+    private static final long versionNegMask = lockMask | deleteMask | singletonMask;
+    private AtomicLong versionAndFlags = new AtomicLong();
+    // lock methods copied from LNode:
+
+    protected boolean tryLock() {
+        long l = versionAndFlags.get();
+        if ((l & lockMask) != 0) {
+            return false;
+        }
+        long locked = l | lockMask;
+        return versionAndFlags.compareAndSet(l, locked);
+    }
+
+    protected void unlock() {
+        long l = versionAndFlags.get();
+        assert ((l & lockMask) != 0);
+        long unlocked = l & (~lockMask);
+        boolean ret = versionAndFlags.compareAndSet(l, unlocked);
+        assert (ret);
+    }
+
+    protected boolean isLocked() {
+        long l = versionAndFlags.get();
+        return (l & lockMask) != 0;
+    }
+
+    // version methods copied from LNode:
+
+    protected long getVersion() {
+        return (versionAndFlags.get() & (~versionNegMask));
+    }
+
+    protected void setVersion(long version) {
+        long l = versionAndFlags.get();
+        assert ((l & lockMask) != 0);
+        l &= versionNegMask;
+        l |= (version & (~versionNegMask));
+        versionAndFlags.set(l);
+    }
 
 }
 

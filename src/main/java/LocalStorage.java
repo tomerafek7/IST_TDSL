@@ -13,6 +13,13 @@ public class LocalStorage {
     protected HashSet<LNode> readSet = new HashSet<LNode>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexAdd = new HashMap<LinkedList, ArrayList<LNode>>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexRemove = new HashMap<LinkedList, ArrayList<LNode>>();
+    // IST:
+    protected HashMap<ISTNode, ISTWriteElement> ISTWriteSet = new HashMap<>();
+    protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
+    protected ArrayList<ISTInnerNode> decActiveList = new ArrayList<>();
+    protected ArrayList<ISTInnerNode> incUpdateList = new ArrayList<>();
+
+
     // with ArrayList all nodes will be added to the list
     // (no compression needed)
     // later, when we add the nodes to the index,
@@ -25,6 +32,38 @@ public class LocalStorage {
         we.deleted = deleted;
         we.val = val;
         writeSet.put(node, we);
+    }
+
+    protected void ISTPutIntoWriteSet(ISTNode node, boolean isLeaf, Integer index, ISTNode son, Integer key, Object val, boolean isEmpty) {
+        ISTWriteElement we = new ISTWriteElement();
+        we.isLeaf = isLeaf;
+        we.index = index;
+        we.son = son;
+        we.key = key;
+        we.val = val;
+        we.isEmpty = isEmpty;
+        ISTWriteSet.put(node, we);
+    }
+
+    protected ISTNode ISTPutIntoReadSet(ISTNode node) {
+        if(node.getVersion() > readVersion){ // abort immediately
+            TXLibExceptions excep = new TXLibExceptions();
+            throw excep.new AbortException();
+        }
+        ISTReadSet.add(node);
+        if(ISTWriteSet.containsKey(node)){
+            ISTWriteElement we = ISTWriteSet.get(node);
+            ISTNode updatedNode;
+            if (we.isLeaf){
+                updatedNode = new ISTSingleNode(we.key, we.val, we.isEmpty);
+            } else {
+                ISTInnerNode parent = (ISTInnerNode)entry.getKey();
+                parent.children.set(we.index, we.son);
+            }
+            return updatedNode;
+        } else{
+            return node;
+        }
     }
 
     protected void addToIndexAdd(LinkedList list, LNode node) {

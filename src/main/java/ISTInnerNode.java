@@ -1,28 +1,29 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ISTInnerNode<V> extends ISTNode<V>{
+public class ISTInnerNode extends ISTNode{
     int numOfChildren;
     ArrayList<Integer> keys;
-    ArrayList<ISTNode<V>> children;
+    ArrayList<ISTNode> children;
     int updateCount;
     int activeTX;
     int waitQueueIndex;
     int numOfLeaves; // used only in rebuild
     boolean finishedCount; // used only in rebuild
     boolean rebuildFlag;
-    ISTRebuildObject<V> rebuildObject;
+    ISTRebuildObject rebuildObject;
     int debugNumOfLeaves; // used only in debug
+    // TODO: add lock list for commit-time locking
 
 
-    public ISTInnerNode(List<ISTSingleNode<V>> childrenList, int leaves){
+    public ISTInnerNode(List<ISTSingleNode> childrenList, int leaves){
         numOfLeaves = 0;
         finishedCount = false;
         updateCount = 0;
         activeTX = 0;
         waitQueueIndex = 0;
         numOfChildren = childrenList.size();
-        children = new ArrayList<ISTNode<V>>(childrenList);
+        children = new ArrayList<ISTNode>(childrenList);
         rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
@@ -48,7 +49,7 @@ public class ISTInnerNode<V> extends ISTNode<V>{
         rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>();
-        children = new ArrayList<ISTNode<V>> (numOfChildrenReceived);
+        children = new ArrayList<ISTNode> (numOfChildrenReceived);
         for (int i = 0; i<numOfChildrenReceived;i++){//we need to intitialize all the objects in the list
             children.add(null);
             if (i != 1){

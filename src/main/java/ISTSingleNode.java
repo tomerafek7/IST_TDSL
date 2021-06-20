@@ -1,9 +1,9 @@
-public class ISTSingleNode<V> extends ISTNode<V>{
+public class ISTSingleNode extends ISTNode{
     Integer key;
-    V value;
+    Object value;
     boolean isEmpty;
 
-    ISTSingleNode(Integer key, V value, boolean isEmpty){
+    ISTSingleNode(Integer key, Object value, boolean isEmpty){
        this.key = key;
        this.value = value;
        this.isEmpty = isEmpty;

@@ -90,6 +90,24 @@ public class TX {
             }
         }
 
+        // locking IST write set
+
+        HashMap<ISTNode, ISTWriteElement> ISTWriteSet = localStorage.ISTWriteSet;
+
+        HashSet<ISTNode> lockedISTNodes = new HashSet<>();
+
+        if (!abort) {
+            for ( Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
+                ISTNode node = entry.getKey();
+                // TODO: if it's not a leaf, do not lock!
+                if (!node.tryLock()) {
+                    abort = true;
+                    break;
+                }
+                lockedISTNodes.add(node);
+            }
+        }
+
         // validate read set
 
         HashSet<LNode> readSet = localStorage.readSet;
@@ -138,6 +156,26 @@ public class TX {
 
         }
 
+        // validate IST read set
+
+        HashSet<ISTNode> ISTReadSet = localStorage.ISTReadSet;
+
+        if (!abort) {
+
+            for (Object o : ISTReadSet) {
+                ISTNode node = (ISTNode)o;
+                if (!lockedISTNodes.contains(node) && node.isLocked()) {
+                    // someone else holds the lock
+                    abort = true;
+                    break;
+                } else if (node.getVersion() > localStorage.readVersion) {
+                    abort = true;
+                    break;
+                }
+            }
+        }
+
+
         // increment GVC
 
         long writeVersion = 0;
@@ -149,6 +187,7 @@ public class TX {
         }
 
         // commit
+
         if (!abort && !localStorage.readOnly) {
             // LinkedList
 
@@ -187,9 +226,28 @@ public class TX {
 
         }
 
+        if (!abort) {
+            // IST
+            for (Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
+                ISTWriteElement we = entry.getValue();
+                ISTNode node = entry.getKey(); // to perform setVersion
+                if (we.isLeaf){
+                    ISTSingleNode leaf = (ISTSingleNode)entry.getKey();
+                    leaf.key = we.key;
+                    leaf.value = we.val;
+                    leaf.isEmpty = we.isEmpty;
+                } else {
+                    ISTInnerNode parent = (ISTInnerNode)entry.getKey();
+                    parent.children.set(we.index, we.son);
+                }
+                node.setVersion(writeVersion);
+            }
+        }
+
         // release locks, even if abort
 
         lockedLNodes.forEach(LNode::unlock);
+        lockedISTNodes.forEach(ISTNode::unlock);
 
         for (Entry<Queue, LocalQueue> entry : qMap.entrySet()) {
 
@@ -200,6 +258,8 @@ public class TX {
                 lQueue.isLockedByMe = false;
             }
         }
+
+        // TODO: should we do something with index for IST?
 
         // update index
         if (!abort && !localStorage.readOnly) {
@@ -219,11 +279,21 @@ public class TX {
             }
         }
 
+        // IST - Fetch-And-Add
+        for(ISTInnerNode node : localStorage.decActiveList){
+            node.activeTX.decrementAndGet();
+        }
+        for(ISTInnerNode node : localStorage.incUpdateList){
+            node.updateCount++;
+        }
+
         // cleanup
 
         localStorage.queueMap.clear();
         localStorage.writeSet.clear();
         localStorage.readSet.clear();
+        localStorage.ISTWriteSet.clear();
+        localStorage.ISTReadSet.clear();
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();
         localStorage.TX = false;
