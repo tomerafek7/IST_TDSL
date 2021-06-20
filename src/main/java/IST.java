@@ -181,28 +181,40 @@ public class IST <V> {
     ISTInnerNode<V> checkAndHelpRebuild(ISTInnerNode<V> root, ISTInnerNode<V> parent, int index){
         if (root.rebuildFlag) {
             root.rebuildObject.helpRebuild();
-            return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
+            return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
             while (true){
-                boolean result = true; // = = DCSS(rebuild_flag, 0, 1, active, 0)
+                boolean result = true; // = = DCSS(rebuild_flag, 0, 1, active, 0) OR CAS(active,0,-1)
 
                 if (result){
                     root.rebuildFlag = true;
                     rebuild(root, parent, index);
-                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
+                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
                 else if (!result){
                     root.rebuildObject.helpRebuild();
-                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index);
+                    return checkAndHelpRebuild((ISTInnerNode<V>) parent.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
             }
         }
 
         boolean result = !root.rebuildFlag ;//DCSS(active, NA, ++, rebuild_flag, 0)
+        /*
+        while(true){
+            active = root.activeTX;
+            if(active == -1){
+                return checkAndHelpRebuild(root,parent,index);
+            } else{
+                res = CAS(root.activeTX, active, active+1);
+                if (res == active+1) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
+            }
+        }
+        */
+
         if (result) {
             root.activeTX ++;
-            return root;
+            return root; // return the updated sub-tree root, so the operation will continue with the updated tree
             //FAA(root.active_TX, -1);
         }
         else {

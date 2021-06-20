@@ -164,12 +164,13 @@ public class ISTRebuildObject<V> {
     }
     boolean helpRebuild(){
         if (finishedRebuild){
-            return false;
+            return false; // in this case we need to update the root (outside)
         }
         int keyCount = subTreeCount(oldIstTree);
         createIdealCollaborative(keyCount);
         parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
         //TODO: add dcss with finished rebuild
+        // TODO: is CAS enough here?
         return true;
     }
 }
