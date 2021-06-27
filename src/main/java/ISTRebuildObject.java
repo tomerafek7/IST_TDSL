@@ -167,12 +167,12 @@ public class ISTRebuildObject {
             if (!child.isInner){
                 keyCount += (child.single).isEmpty ? 0 : 1;
             } else { // inner
-                ISTInnerNode innerChild = child.inner;
+                ISTNode innerChild = child;
                 //TODO: maor: i think we're good enough here, need to verify
                 // TODO: need to read count & finished atomically!
-                boolean finished = innerChild.finishedCount;
+                boolean finished = innerChild.inner.finishedCount;
                 if(finished) {
-                    keyCount += innerChild.numOfLeaves;
+                    keyCount += innerChild.inner.numOfLeaves;
                 } else{
                   keyCount += subTreeCount(child);
                 }
