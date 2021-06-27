@@ -17,8 +17,8 @@ public class LocalStorage {
     // IST:
     protected HashMap<ISTNode, ISTWriteElement> ISTWriteSet = new HashMap<>();
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
-    protected ArrayList<ISTInnerNode> decActiveList = new ArrayList<>();
-    protected ArrayList<ISTInnerNode> incUpdateList = new ArrayList<>();
+    protected ArrayList<ISTNode> decActiveList = new ArrayList<>();
+    protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
 
 
     // with ArrayList all nodes will be added to the list
