@@ -55,23 +55,51 @@ public class IST {
 
     }
 
-    public Object lookup(Integer key){
-        LocalStorage localStorage = TX.lStorage.get();
+    private ISTNode traverseTree(Integer key, ArrayList<Pair<ISTInnerNode, Integer>> path, LocalStorage localStorage){
         ISTNode curNode = root;
         ISTInnerNode parentNode = null;
-        // going down the tree
         while (true){
             parentNode = (ISTInnerNode) curNode;
             int idx = interpolate((ISTInnerNode) curNode, key);
+            path.add(new Pair<>((ISTInnerNode)curNode, idx));
             curNode = ((ISTInnerNode) curNode).children.get(idx);
-            if(curNode instanceof ISTSingleNode) break;
+            if(curNode instanceof ISTSingleNode){
+                // reached a leaf - insert to read-set + check if it's on the write set
+                curNode = localStorage.ISTPutIntoReadSet(curNode, parentNode, idx);
+                // if it's still a single , finish
+                if(curNode instanceof ISTSingleNode) {
+                    return curNode;
+                }
+            }
             // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
             curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
         }
-        // reached a leaf
-        // TODO: ReadSet(curNode)
-        ISTSingleNode leaf = ((ISTSingleNode) curNode);
-        if (leaf.key.equals(key) && !leaf.isEmpty){
+    }
+
+    public Object lookup(Integer key){
+        LocalStorage localStorage = TX.lStorage.get();
+        ArrayList<Pair<ISTInnerNode, Integer>> path = new ArrayList<>();
+//        ISTNode curNode = root;
+//        ISTInnerNode parentNode = null;
+//        // going down the tree
+//        while (true){
+//            parentNode = (ISTInnerNode) curNode;
+//            int idx = interpolate((ISTInnerNode) curNode, key);
+//            curNode = ((ISTInnerNode) curNode).children.get(idx);
+//            if(curNode instanceof ISTSingleNode){
+//                // reached a leaf - insert to read-set + check if it's on the write set
+//                curNode = localStorage.ISTPutIntoReadSet(curNode, parentNode, idx);
+//                // if it's still a single , break
+//                if(curNode instanceof ISTSingleNode) {
+//                    break;
+//                }
+//            }
+//            // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
+//            curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
+//        }
+        // traverse the tree
+        ISTSingleNode leaf = ((ISTSingleNode) traverseTree(key, path, localStorage));
+        if (!leaf.isEmpty && leaf.key.equals(key)){
             return leaf.value;
         } else {
             return null;
@@ -80,51 +108,53 @@ public class IST {
 
     public void insert(Integer key, Object value){
         LocalStorage localStorage = TX.lStorage.get();
-        ISTNode curNode = root;
-        ISTInnerNode parentNode = null;
+//        ISTNode curNode = root;
+//        ISTInnerNode parentNode = null;
         ArrayList<Pair<ISTInnerNode, Integer>> path = new ArrayList<>();
-        int idx = -1;
-        // going down the tree
-        while (true) {
-            parentNode = (ISTInnerNode) curNode;
-            idx = interpolate((ISTInnerNode) curNode, key);
-            path.add(new Pair<>((ISTInnerNode)curNode, idx));
-            curNode = ((ISTInnerNode) curNode).children.get(idx);
-            if(curNode instanceof ISTSingleNode) break;
-            // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
-            curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
-        }
-        // reached a leaf
-        // TODO: ReadSet(curNode)
-        ISTSingleNode leaf = ((ISTSingleNode) curNode);
+//        int idx = -1;
+//        // going down the tree
+//        while (true) {
+//            parentNode = (ISTInnerNode) curNode;
+//            idx = interpolate((ISTInnerNode) curNode, key);
+//            path.add(new Pair<>((ISTInnerNode)curNode, idx));
+//            curNode = ((ISTInnerNode) curNode).children.get(idx);
+//            if(curNode instanceof ISTSingleNode) break;
+//            // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
+//            curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
+//        }
+        // traverse the tree
+        ISTSingleNode leaf = ((ISTSingleNode) traverseTree(key, path, localStorage));
+        // get parent + idx from the last element in path (path is updated in traverseTree)
+        ISTInnerNode parentNode = path.get(path.size()-1).fst;
+        Integer idx = path.get(path.size()-1).snd;
         if (!leaf.isEmpty){ // non-empty leaf
             if(leaf.key.equals(key)){ // same key --> just replace value.
                 //leaf.value = value;
-                localStorage.ISTPutIntoWriteSet(leaf, true, null, null, key, value, false);
+                localStorage.ISTPutIntoSingleWriteSet(leaf, key, value, false);
             } else { // different key --> split into 2 singles
                 ArrayList<ISTSingleNode> childrenList = new ArrayList<>();
                 ISTSingleNode newSingle = new ISTSingleNode(key, value, false);
                 // choose the children order: (the first to insert must be the smaller one)
-                if(key < leaf.key){
+                if (key < leaf.key) {
                     childrenList.add(newSingle);
-                    childrenList.add((ISTSingleNode)curNode);
+                    childrenList.add(leaf);
                 } else {
-                    childrenList.add((ISTSingleNode) curNode);
+                    childrenList.add(leaf);
                     childrenList.add(newSingle);
                 }
-                ISTInnerNode newInner = new ISTInnerNode(childrenList,2);
+                ISTInnerNode newInner = new ISTInnerNode(childrenList, 2);
                 assert parentNode != null;
                 assert idx != -1;
                 //parentNode.children.set(idx, newInner); // the last index from the loop is our index
-                localStorage.ISTPutIntoWriteSet(parentNode, false, idx, newInner, null, null, false);
-                // TODO: add to write set the old son (curNode), to force invalidation
-
+                localStorage.ISTPutIntoInnerWriteSet(parentNode, idx, newInner);
+                // add to write set the old son (curNode), to force invalidation : (do not care about the values)
+                localStorage.ISTPutIntoSingleWriteSet(leaf, null, null, true);
             }
         } else { // empty leaf
 //            leaf.key = key;
 //            leaf.value = value;
 //            leaf.isEmpty = false;
-            localStorage.ISTPutIntoWriteSet(leaf, true, null,null, key, value, false);
+            localStorage.ISTPutIntoSingleWriteSet(leaf, key, value, false);
 
         }
 
@@ -137,27 +167,30 @@ public class IST {
 
     public void remove(Integer key){
         LocalStorage localStorage = TX.lStorage.get();
-        ISTNode curNode = root;
-        ISTInnerNode parentNode = null;
+//        ISTNode curNode = root;
+//        ISTInnerNode parentNode = null;
         ArrayList<Pair<ISTInnerNode, Integer>> path = new ArrayList<>();
-        int idx = -1;
-        // going down the tree
-        while (true){
-            parentNode = (ISTInnerNode)curNode;
-            idx = interpolate((ISTInnerNode) curNode, key);
-            path.add(new Pair<>((ISTInnerNode)curNode, idx));
-            curNode = ((ISTInnerNode) curNode).children.get(idx);
-            if(curNode instanceof ISTSingleNode) break;
-            // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
-            curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
-        }
-        // reached a leaf
-        // TODO: ReadSet(curNode)
-        ISTSingleNode leaf = ((ISTSingleNode) curNode);
+//        int idx = -1;
+//        // going down the tree
+//        while (true){
+//            parentNode = (ISTInnerNode)curNode;
+//            idx = interpolate((ISTInnerNode) curNode, key);
+//            path.add(new Pair<>((ISTInnerNode)curNode, idx));
+//            curNode = ((ISTInnerNode) curNode).children.get(idx);
+//            if(curNode instanceof ISTSingleNode) break;
+//            // check if rebuild is needed. TODO: maybe check rebuild at the end of the operation
+//            curNode = checkAndHelpRebuild((ISTInnerNode)curNode, parentNode, idx);
+//        }
+//        ISTSingleNode leaf = ((ISTSingleNode) curNode);
+        // traverse the tree
+        ISTSingleNode leaf = ((ISTSingleNode) traverseTree(key, path, localStorage));
+        // get parent + idx from the last element in path (path is updated in traverseTree)
+//        ISTInnerNode parentNode = path.get(path.size()-1).fst;
+//        Integer idx = path.get(path.size()-1).snd;
         if (!leaf.isEmpty){ // non-empty leaf
             if(leaf.key.equals(key)){ // same key --> DELETE.
                 //leaf.isEmpty = true;
-                localStorage.ISTPutIntoWriteSet(leaf, true, null, null, null, null, true);
+                localStorage.ISTPutIntoSingleWriteSet(leaf, null, null, true);
             } else { // different key --> ERROR
                 // TODO: throw exception?
                 assert(false);

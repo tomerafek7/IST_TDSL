@@ -14,7 +14,8 @@ public class LocalStorage {
     protected HashMap<LinkedList, ArrayList<LNode>> indexAdd = new HashMap<LinkedList, ArrayList<LNode>>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexRemove = new HashMap<LinkedList, ArrayList<LNode>>();
     // IST:
-    protected HashMap<ISTNode, ISTWriteElement> ISTWriteSet = new HashMap<>();
+    protected HashMap<ISTNode, ISTSingleWriteElement> ISTSingleWriteSet = new HashMap<>();
+    protected HashMap<ISTNode, ISTInnerWriteElement> ISTInnerWriteSet = new HashMap<>();
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
     protected ArrayList<ISTInnerNode> decActiveList = new ArrayList<>();
     protected ArrayList<ISTInnerNode> incUpdateList = new ArrayList<>();
@@ -34,37 +35,42 @@ public class LocalStorage {
         writeSet.put(node, we);
     }
 
-    protected void ISTPutIntoWriteSet(ISTNode node, boolean isLeaf, Integer index, ISTNode son, Integer key, Object val, boolean isEmpty) {
-        ISTWriteElement we = new ISTWriteElement();
-        we.isLeaf = isLeaf;
-        we.index = index;
-        we.son = son;
+    protected void ISTPutIntoSingleWriteSet(ISTNode node, Integer key, Object val, boolean isEmpty) {
+        ISTSingleWriteElement we = new ISTSingleWriteElement();
         we.key = key;
         we.val = val;
         we.isEmpty = isEmpty;
-        ISTWriteSet.put(node, we);
+        ISTSingleWriteSet.put(node, we);
     }
 
-//    protected ISTNode ISTPutIntoReadSet(ISTNode node) {
-//        if(node.getVersion() > readVersion){ // abort immediately
-//            TXLibExceptions excep = new TXLibExceptions();
-//            throw excep.new AbortException();
-//        }
-//        ISTReadSet.add(node);
-//        if(ISTWriteSet.containsKey(node)){
-//            ISTWriteElement we = ISTWriteSet.get(node);
-//            ISTNode updatedNode;
-//            if (we.isLeaf){
-//                updatedNode = new ISTSingleNode(we.key, we.val, we.isEmpty);
-//            } else {
-//                ISTInnerNode parent = (ISTInnerNode)entry.getKey();
-//                parent.children.set(we.index, we.son);
-//            }
-//            return updatedNode;
-//        } else{
-//            return node;
-//        }
-//    }
+    protected void ISTPutIntoInnerWriteSet(ISTNode node, Integer index, ISTNode son) {
+        ISTInnerWriteElement we = new ISTInnerWriteElement();
+        we.index = index;
+        we.son = son;
+        ISTInnerWriteSet.put(node, we);
+    }
+    protected ISTNode ISTPutIntoReadSet(ISTNode node, ISTInnerNode parent, Integer index) {
+        if(node.getVersion() > readVersion){ // abort immediately
+            TXLibExceptions excep = new TXLibExceptions();
+            throw excep.new AbortException();
+        }
+        ISTReadSet.add(node);
+        // if this node is in the cur TX write-set - read it from there
+        // 1. check if the parent is in write-set (changed ptr)
+        if(ISTInnerWriteSet.containsKey(parent)) {
+            ISTInnerWriteElement we = ISTInnerWriteSet.get(parent);
+            if (index.equals(we.index)) { // relevant only if this is the same index
+                return we.son;
+            }
+        }
+        // 2. check if the node is in write-set (changed value / isEmpty)
+        if(ISTSingleWriteSet.containsKey(node)) {
+            ISTSingleWriteElement we = ISTSingleWriteSet.get(node);
+            return new ISTSingleNode(we.key, we.val, we.isEmpty);
+        }
+        // not in write-set:
+        return node;
+    }
 
     protected void addToIndexAdd(LinkedList list, LNode node) {
         ArrayList<LNode> nodes = indexAdd.get(list);

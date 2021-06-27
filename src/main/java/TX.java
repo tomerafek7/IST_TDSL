@@ -90,16 +90,16 @@ public class TX {
             }
         }
 
-        // locking IST write set
+        // locking IST Single write set (we do not lock the Inner write set - hurts performance)
 
-        HashMap<ISTNode, ISTWriteElement> ISTWriteSet = localStorage.ISTWriteSet;
+        HashMap<ISTNode, ISTSingleWriteElement> ISTSingleWriteSet = localStorage.ISTSingleWriteSet;
+        HashMap<ISTNode, ISTInnerWriteElement> ISTInnerWriteSet = localStorage.ISTInnerWriteSet; // to use later
 
         HashSet<ISTNode> lockedISTNodes = new HashSet<>();
 
         if (!abort) {
-            for ( Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
+            for ( Entry<ISTNode, ISTSingleWriteElement> entry : ISTSingleWriteSet.entrySet()) {
                 ISTNode node = entry.getKey();
-                // TODO: if it's not a leaf, do not lock!
                 if (!node.tryLock()) {
                     abort = true;
                     break;
@@ -227,20 +227,23 @@ public class TX {
         }
 
         if (!abort) {
-            // IST
-            for (Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
-                ISTWriteElement we = entry.getValue();
+            // IST - Single
+            for (Entry<ISTNode, ISTSingleWriteElement> entry : ISTSingleWriteSet.entrySet()) {
+                ISTSingleWriteElement we = entry.getValue();
                 ISTNode node = entry.getKey(); // to perform setVersion
-                if (we.isLeaf){
-                    ISTSingleNode leaf = (ISTSingleNode)entry.getKey();
-                    leaf.key = we.key;
-                    leaf.value = we.val;
-                    leaf.isEmpty = we.isEmpty;
-                } else {
-                    ISTInnerNode parent = (ISTInnerNode)entry.getKey();
-                    parent.children.set(we.index, we.son);
-                }
+                ISTSingleNode leaf = (ISTSingleNode) entry.getKey();
+                leaf.key = we.key;
+                leaf.value = we.val;
+                leaf.isEmpty = we.isEmpty;
                 node.setVersion(writeVersion);
+            }
+            // IST - Inner
+            for (Entry<ISTNode, ISTInnerWriteElement> entry : ISTInnerWriteSet.entrySet()) {
+                ISTInnerWriteElement we = entry.getValue();
+                ISTNode node = entry.getKey(); // to perform setVersion
+                ISTInnerNode parent = (ISTInnerNode) entry.getKey();
+                parent.children.set(we.index, we.son);
+//                node.setVersion(writeVersion); // TODO: maybe must do it
             }
         }
 
@@ -292,7 +295,8 @@ public class TX {
         localStorage.queueMap.clear();
         localStorage.writeSet.clear();
         localStorage.readSet.clear();
-        localStorage.ISTWriteSet.clear();
+        localStorage.ISTSingleWriteSet.clear();
+        localStorage.ISTInnerWriteSet.clear();
         localStorage.ISTReadSet.clear();
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();
