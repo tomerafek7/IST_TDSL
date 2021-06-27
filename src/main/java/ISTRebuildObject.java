@@ -103,10 +103,13 @@ public class ISTRebuildObject {
         }
         //TODO: might be a rebuild above us, can optimize
         if (lock.tryLock()) { // if someone else caught the lock this rebuilt sub tree is no longer necessary
-            if (newIstTree.children.get(index) == null) {// TODO first : compare this with AtomicReference
-                newIstTree.children.set(index, child);
+            try {
+                if (newIstTree.children.get(index) == null) {// TODO first : compare this with AtomicReference
+                    newIstTree.children.set(index, child);
+                }
+            } finally {
+                lock.unlock();
             }
-            lock.unlock();
         }
         return true;
     }
@@ -186,11 +189,15 @@ public class ISTRebuildObject {
         }
         int keyCount = subTreeCount(oldIstTree);
         createIdealCollaborative(keyCount);
-        if (lock.tryLock()){
-            if (parent.children.get(index) == oldIstTree) {
-                parent.children.set(index,newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+        if (lock.tryLock()){//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
+            try {
+                if (parent.children.get(index) == oldIstTree) {
+                    parent.children.set(index, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+                }
             }
-            lock.unlock();
+            finally {
+                lock.unlock();
+            }
         }
         if (IST.DEBUG_MODE){
           //  IST.debugPrintNumLeaves(newIstTree);
