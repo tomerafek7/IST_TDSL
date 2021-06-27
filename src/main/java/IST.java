@@ -65,7 +65,7 @@ public class IST {
             curNode = ((ISTInnerNode) curNode).children.get(idx);
             if(curNode instanceof ISTSingleNode){
                 // reached a leaf - insert to read-set + check if it's on the write set
-                curNode = localStorage.ISTPutIntoReadSet(curNode, parentNode, idx);
+                curNode = localStorage.ISTPutIntoReadSet(curNode);
                 // if it's still a single , finish
                 if(curNode instanceof ISTSingleNode) {
                     return curNode;

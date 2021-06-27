@@ -92,13 +92,12 @@ public class TX {
 
         // locking IST Single write set (we do not lock the Inner write set - hurts performance)
 
-        HashMap<ISTNode, ISTSingleWriteElement> ISTSingleWriteSet = localStorage.ISTSingleWriteSet;
-        HashMap<ISTNode, ISTInnerWriteElement> ISTInnerWriteSet = localStorage.ISTInnerWriteSet; // to use later
+        HashMap<ISTNode, ISTWriteElement> ISTWriteSet = localStorage.ISTWriteSet;
 
         HashSet<ISTNode> lockedISTNodes = new HashSet<>();
 
         if (!abort) {
-            for ( Entry<ISTNode, ISTSingleWriteElement> entry : ISTSingleWriteSet.entrySet()) {
+            for ( Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
                 ISTNode node = entry.getKey();
                 if (!node.tryLock()) {
                     abort = true;
@@ -228,13 +227,13 @@ public class TX {
 
         if (!abort) {
             // IST - Single
-            for (Entry<ISTNode, ISTSingleWriteElement> entry : ISTSingleWriteSet.entrySet()) {
-                ISTSingleWriteElement we = entry.getValue();
+            for (Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
+                ISTWriteElement we = entry.getValue();
                 ISTNode node = entry.getKey(); // to perform setVersion
-                ISTSingleNode leaf = (ISTSingleNode) entry.getKey();
-                leaf.key = we.key;
-                leaf.value = we.val;
-                leaf.isEmpty = we.isEmpty;
+                ISTNode leaf = entry.getKey();
+                leaf.single.key = we.key;
+                leaf.single.value = we.val;
+                leaf.single.isEmpty = we.isEmpty;
                 node.setVersion(writeVersion);
             }
             // IST - Inner

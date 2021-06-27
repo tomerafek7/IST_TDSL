@@ -38,6 +38,14 @@ public class ISTNode {
         this.maxKey = key;
     }
 
+    public void changeToInner(List<ISTNode> childrenList, int leaves){
+        inner = new ISTInnerNode(childrenList, leaves);
+        single = null;
+        isInner = true;
+        minKey = inner.keys.get(0);
+        maxKey = inner.keys.get(inner.keys.size()-1);
+    }
+
     // lock methods copied from LNode:
 
     protected boolean tryLock() {
