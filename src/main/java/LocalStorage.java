@@ -15,7 +15,8 @@ public class LocalStorage {
     protected HashMap<LinkedList, ArrayList<LNode>> indexAdd = new HashMap<LinkedList, ArrayList<LNode>>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexRemove = new HashMap<LinkedList, ArrayList<LNode>>();
     // IST:
-    protected HashMap<ISTNode, ISTWriteElement> ISTWriteSet = new HashMap<>();
+    protected HashMap<ISTNode, ISTNode> ISTWriteSet = new HashMap<>();
+    protected HashMap<ISTNode, ISTNode> ISTInverseWriteSet = new HashMap<>();  // maintaining a map of newNode -> oldNode
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
     protected ArrayList<ISTNode> decActiveList = new ArrayList<>();
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
@@ -36,13 +37,29 @@ public class LocalStorage {
     }
 
     protected void ISTPutIntoWriteSet(ISTNode node, boolean isToInner, List<ISTNode> childrenList, Integer key, Object val, boolean isEmpty) {
-        ISTWriteElement we = new ISTWriteElement();
-        we.isToInner = isToInner;
-        we.childrenList = childrenList;
-        we.key = key;
-        we.val = val;
-        we.isEmpty = isEmpty;
-        ISTWriteSet.put(node, we);
+//        ISTWriteElement we = new ISTWriteElement();
+        ISTNode newNode;
+        if(isToInner){ // single --> inner
+            newNode = new ISTNode(childrenList, childrenList.size());
+        } else { // single --> single
+            newNode = new ISTNode(key, val, isEmpty);
+        }
+
+        if(ISTInverseWriteSet.containsKey(node)){ // the old node is a replaced one
+            ISTNode tempNode = ISTInverseWriteSet.get(node);
+            ISTWriteSet.replace(tempNode, newNode); // override old Node
+            // updating the inverse map
+            ISTInverseWriteSet.remove(node);
+            ISTInverseWriteSet.put(newNode, tempNode);
+        } else { // normal case
+            ISTWriteSet.put(node, newNode);
+            ISTInverseWriteSet.put(newNode, node); // maintaining an inverse map of newNode -> oldNode
+        }
+//        we.isToInner = isToInner;
+//        we.childrenList = childrenList;
+//        we.key = key;
+//        we.val = val;
+//        we.isEmpty = isEmpty;
     }
 
     protected ISTNode ISTPutIntoReadSet(ISTNode node) {
@@ -52,15 +69,20 @@ public class LocalStorage {
         }
         ISTReadSet.add(node);
         // if this node is in the cur TX write-set - read it from there
-        // 1. check if the parent is in write-set (changed ptr)
         if(ISTWriteSet.containsKey(node)) {
-            ISTWriteElement we = ISTWriteSet.get(node);
-            if(we.isToInner){ // single -> inner
-                return new ISTNode(we.childrenList, we.childrenList.size());
-            } else { // single --> single
-                return new ISTNode(we.key, we.val, we.isEmpty);
-            }
+            return ISTWriteSet.get(node);
         }
+//            }ISTNode newNode = ISTWriteSet.get(node);
+//            if(we.isToInner){ // single -> inner
+//                // FIXME
+//                ISTNode newNode = new ISTNode(we.childrenList, we.childrenList.size());
+//                ISTWriteSet.replace()
+//                return
+//            } else { // single --> single
+//                // FIXME
+//                return new ISTNode(we.key, we.val, we.isEmpty);
+//            }
+//        }
         // not in write-set:
         return node;
     }

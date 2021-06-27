@@ -92,12 +92,12 @@ public class TX {
 
         // locking IST write set
 
-        HashMap<ISTNode, ISTWriteElement> ISTWriteSet = localStorage.ISTWriteSet;
+        HashMap<ISTNode, ISTNode> ISTWriteSet = localStorage.ISTWriteSet;
 
         HashSet<ISTNode> lockedISTNodes = new HashSet<>();
 
         if (!abort) {
-            for ( Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
+            for ( Entry<ISTNode, ISTNode> entry : ISTWriteSet.entrySet()) {
                 ISTNode node = entry.getKey();
                 if (!node.tryLock()) {
                     abort = true;
@@ -227,15 +227,16 @@ public class TX {
 
         if (!abort) {
             // IST
-            for (Entry<ISTNode, ISTWriteElement> entry : ISTWriteSet.entrySet()) {
-                ISTWriteElement we = entry.getValue();
+            for (Entry<ISTNode, ISTNode> entry : ISTWriteSet.entrySet()) {
+//                ISTWriteElement we = entry.getValue();
+                ISTNode newNode = entry.getValue();
                 ISTNode node = entry.getKey();
-                if(we.isToInner) {
-                    node.changeToInner(we.childrenList, we.childrenList.size());
-                } else {
-                    node.single.key = we.key;
-                    node.single.value = we.val;
-                    node.single.isEmpty = we.isEmpty;
+                if(newNode.isInner) { // single --> inner
+                    node.changeToInner(newNode.inner);
+                } else { // single --> single
+                    node.single.key = newNode.single.key;
+                    node.single.value = newNode.single.value;
+                    node.single.isEmpty = newNode.single.isEmpty;
                     node.setVersion(writeVersion);
                 }
             }
@@ -279,6 +280,9 @@ public class TX {
         // IST - Fetch-And-Add
         for(ISTNode node : localStorage.decActiveList){
             node.inner.activeTX.decrementAndGet();
+            if(node.inner.activeTX.get() < 0){
+                int x =1 ;
+            }
         }
         for(ISTNode node : localStorage.incUpdateList){
             node.inner.updateCount++;
@@ -290,6 +294,7 @@ public class TX {
         localStorage.writeSet.clear();
         localStorage.readSet.clear();
         localStorage.ISTWriteSet.clear();
+        localStorage.ISTInverseWriteSet.clear();
         localStorage.ISTReadSet.clear();
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();

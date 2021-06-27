@@ -104,21 +104,22 @@ public class IST {
                 localStorage.ISTPutIntoWriteSet(leaf, false,null,key,value,false);
             } else { // different key --> split into 2 singles
                 ArrayList<ISTNode> childrenList = new ArrayList<>();
-                ISTNode newSingle = new ISTNode(key, value, false);
+                ISTNode newSingle1 = new ISTNode(leaf.single.key, leaf.single.value, false);
+                ISTNode newSingle2 = new ISTNode(key, value, false);
                 // choose the children order: (the first to insert must be the smaller one)
-                if (key < leaf.single.key) {
-                    childrenList.add(newSingle);
-                    childrenList.add(leaf);
+                if (newSingle1.single.key < newSingle2.single.key) {
+                    childrenList.add(newSingle1);
+                    childrenList.add(newSingle2);
                 } else {
-                    childrenList.add(leaf);
-                    childrenList.add(newSingle);
+                    childrenList.add(newSingle2);
+                    childrenList.add(newSingle1);
                 }
                 assert parentNode != null;
                 assert idx != -1;
-                localStorage.ISTPutIntoWriteSet(leaf,true,childrenList,null,null,true);
+                localStorage.ISTPutIntoWriteSet(leaf,true, childrenList,null,null,true);
             }
         } else { // empty leaf
-            localStorage.ISTPutIntoWriteSet(leaf,false, null,key, value, false);
+            localStorage.ISTPutIntoWriteSet(leaf,false, null, key, value, false);
 
         }
 
@@ -166,6 +167,7 @@ public class IST {
     ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index){
         LocalStorage localStorage = TX.lStorage.get();
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
+            //root.inner.rebuildObject.helpRebuild();
             return checkAndHelpRebuild( parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
@@ -178,10 +180,8 @@ public class IST {
                     return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
                 else {
-                    //root.rebuildObject.helpRebuild();
                     return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
-
         }
 
         while(true){
@@ -191,6 +191,7 @@ public class IST {
                 return checkAndHelpRebuild(root,parent,index);
             } else{ // try to inc the active counter
                 result = root.inner.activeTX.compareAndSet(active, active+1);
+                assert (result);
                 localStorage.decActiveList.add(root);
                 if (result) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
             }

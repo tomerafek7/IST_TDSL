@@ -38,8 +38,8 @@ public class ISTNode {
         this.maxKey = key;
     }
 
-    public void changeToInner(List<ISTNode> childrenList, int leaves){
-        inner = new ISTInnerNode(childrenList, leaves);
+    public void changeToInner(ISTInnerNode newInner){
+        inner = newInner;
         single = null;
         isInner = true;
         minKey = inner.keys.get(0);

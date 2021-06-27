@@ -14,7 +14,7 @@ public class ISTnoTXTest {
     public void testCreation(){
         IST myTree = new IST();
         Assert.assertNotNull(myTree.root);
-        Assert.assertTrue(((ISTSingleNode) myTree.root.children.get(0)).isEmpty);
+        Assert.assertTrue((myTree.root.inner.children.get(0)).single.isEmpty);
     }
 
     @Test
@@ -122,7 +122,7 @@ public class ISTnoTXTest {
             //System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
             if (i%1000 == 0 && i!=0) {
-                IST.debugPrintNumLeaves(myTree.root.children.get(0));
+                IST.debugPrintNumLeaves(myTree.root.inner.children.get(0));
             }
         }
         for (int i=0; i<10000; i++) {
@@ -134,7 +134,7 @@ public class ISTnoTXTest {
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
             if (i%1000 == 0 && i!=0) {
-                IST.debugPrintNumLeaves(myTree.root.children.get(0));
+                IST.debugPrintNumLeaves(myTree.root.inner.children.get(0));
             }
         }
     }

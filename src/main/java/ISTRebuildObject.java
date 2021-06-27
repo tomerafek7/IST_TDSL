@@ -59,7 +59,7 @@ public class ISTRebuildObject {
                                                    ISTNode currentNode, int numKeysToSkip, int numKeysToAdd) {
         for (int i = 0; i < currentNode.inner.numOfChildren; i++) {
             ISTNode child = currentNode.inner.children.get(i);
-            if (!child.isInner  && (!child.single.isEmpty)) {//child is single and not empty
+            if (!child.isInner  && (!child.single.isEmpty)) { //child is single and not empty
                 if (numKeysToSkip > 0) {
                     numKeysToSkip--;
                 } else { //here we found a single node that should be added.
@@ -67,7 +67,7 @@ public class ISTRebuildObject {
                     if (--numKeysToAdd == 0) return list;
 
                 }
-            } else  { //child is inner node
+            } else if (child.isInner) { //child is inner node
                 if (numKeysToSkip > (child.inner).numOfLeaves) {
                     numKeysToSkip -= (child.inner).numOfLeaves;
                 } else if (numKeysToSkip + numKeysToAdd <= (child.inner).numOfLeaves) { // all of the children are in this subtree
