@@ -44,16 +44,16 @@ public class ISTTXTest {
             TX.TXend();
         }
 
-//        try {
-//            TX.TXbegin();
-//            for (int i = 0; i < 1000; i++) {
-//                Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
-//            }
-//        } catch (TXLibExceptions.AbortException exp) {
-//        System.out.println("abort");
-//        } finally {
-//        TX.TXend();
-//        }
+        try {
+            TX.TXbegin();
+            for (int i = 0; i < 1000; i++) {
+                Assert.assertNull(myTree.lookup(keyList.get(i)));
+            }
+        } catch (TXLibExceptions.AbortException exp) {
+        System.out.println("abort");
+        } finally {
+        TX.TXend();
+        }
     }
 
     @Test
@@ -70,28 +70,29 @@ public class ISTTXTest {
         Collections.shuffle(valueList, rand);
 
 
-            //System.out.println("after begin");
-            for (int i = 0; i < 1000; i++) {
-                try {
-                    TX.TXbegin();
-                    myTree.insert(keyList.get(i), valueList.get(i));
-                    //System.out.println(valueList.get(i));
-                    Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
-                } catch (TXLibExceptions.AbortException exp) {
-                    System.out.println("abort");
-                } finally {
-                    TX.TXend();
-                }
-                //System.out.println("insert " + i);
-            }
-            for (int i = 0; i < 1000; i++) {
+        //System.out.println("after begin");
+        for (int i = 0; i < 1000; i++) {
+            try {
+                TX.TXbegin();
+                myTree.insert(keyList.get(i), valueList.get(i));
+                //myTree.print();
+                //System.out.println(valueList.get(i));
                 Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+            } catch (TXLibExceptions.AbortException exp) {
+                System.out.println("abort");
+            } finally {
+                TX.TXend();
             }
+            //System.out.println("insert " + i);
+        }
+        for (int i = 0; i < 1000; i++) {
+            Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+        }
 
-            for (int i = 0; i < 1000; i++) {
-                myTree.remove(keyList.get(i));
-                Assert.assertNull(myTree.lookup(keyList.get(i)));
-            }
+        for (int i = 0; i < 1000; i++) {
+            myTree.remove(keyList.get(i));
+            Assert.assertNull(myTree.lookup(keyList.get(i)));
+        }
 
 
 //        try {

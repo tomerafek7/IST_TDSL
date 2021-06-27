@@ -6,9 +6,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ISTRebuildObject {
     ISTNode oldIstTree;
-    AtomicReference<ISTNode>newIstTreeReference;
+    AtomicReference<ISTNode> newIstTreeReference;
     ISTNode newIstTree;
-    int index;//TODO: check if needed
+    int indexInParent;//TODO: check if needed
     ISTNode parent;
     boolean finishedRebuild;
     ReentrantLock lock;
@@ -16,12 +16,12 @@ public class ISTRebuildObject {
 
     ISTRebuildObject(ISTNode oldTree, int indexInParent, ISTNode parentNode){
         oldIstTree = oldTree;
-        index = indexInParent;
+        this.indexInParent = indexInParent;
         parent = parentNode;
         finishedRebuild = false;
-        newIstTreeReference = null;
+        newIstTreeReference = new AtomicReference<>(null);
         newIstTree = null;
-        ReentrantLock lock = new ReentrantLock();
+        lock = new ReentrantLock();
 
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
@@ -129,7 +129,10 @@ public class ISTRebuildObject {
 
 
        if (keyCount > COLLABORATION_THRESHOLD) {
-           ArrayList<ReentrantLock> locks= new ArrayList<>(index);
+           ArrayList<ReentrantLock> locks = new ArrayList<>();
+           for (int i=0; i<newIstTree.inner.numOfChildren; i++){ // init array as nulls
+               locks.add(null);
+           }
            while (true) {
                int index = newIstTree.inner.waitQueueIndex.getAndIncrement() ;
                if (index == newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
@@ -154,32 +157,30 @@ public class ISTRebuildObject {
             return (curNode.single).isEmpty ? 0 : 1;
         }
         // here node is inner
-        ISTNode innerCurNode = curNode;
-        if (innerCurNode.inner.numOfChildren > COLLABORATION_THRESHOLD) {
+        if (curNode.inner.numOfChildren > COLLABORATION_THRESHOLD) {
             while (true) { // work queue
-                int index = innerCurNode.inner.waitQueueIndex.getAndIncrement();
-                if (index >= innerCurNode.inner.numOfChildren) break;
-                subTreeCount(innerCurNode.inner.children.get(index));
+                int index = curNode.inner.waitQueueIndex.getAndIncrement();
+                if (index >= curNode.inner.numOfChildren) break;
+                subTreeCount(curNode.inner.children.get(index));
             }
         }
         int keyCount = 0;
-        for (ISTNode child : innerCurNode.inner.children){
+        for (ISTNode child : curNode.inner.children){
             if (!child.isInner){
                 keyCount += (child.single).isEmpty ? 0 : 1;
             } else { // inner
-                ISTNode innerChild = child;
                 //TODO: maor: i think we're good enough here, need to verify
                 // TODO: need to read count & finished atomically!
-                boolean finished = innerChild.inner.finishedCount;
+                boolean finished = child.inner.finishedCount;
                 if(finished) {
-                    keyCount += innerChild.inner.numOfLeaves;
+                    keyCount += child.inner.numOfLeaves;
                 } else{
                   keyCount += subTreeCount(child);
                 }
             }
         }
-        innerCurNode.inner.numOfLeaves = keyCount; // TODO: need to update both fields atomically!
-        innerCurNode.inner.finishedCount = true;
+        curNode.inner.numOfLeaves = keyCount; // TODO: need to update both fields atomically!
+        curNode.inner.finishedCount = true;
 
         return keyCount;
     }
@@ -188,11 +189,16 @@ public class ISTRebuildObject {
             return false; // in this case we need to update the root (outside)
         }
         int keyCount = subTreeCount(oldIstTree);
-        createIdealCollaborative(keyCount);
+        if(keyCount == 0){ // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
+            newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true));
+            newIstTree = newIstTreeReference.get();
+        } else {
+            createIdealCollaborative(keyCount);
+        }
         if (lock.tryLock()){//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
             try {
-                if (parent.inner.children.get(index) == oldIstTree) {
-                    parent.inner.children.set(index, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+                if (parent.inner.children.get(indexInParent) == oldIstTree) {
+                    parent.inner.children.set(indexInParent, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
                 }
             }
             finally {

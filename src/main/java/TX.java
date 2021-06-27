@@ -293,11 +293,16 @@ public class TX {
         localStorage.queueMap.clear();
         localStorage.writeSet.clear();
         localStorage.readSet.clear();
+        // IST
         localStorage.ISTWriteSet.clear();
         localStorage.ISTInverseWriteSet.clear();
         localStorage.ISTReadSet.clear();
+        localStorage.decActiveList.clear();
+        localStorage.incUpdateList.clear();
+        // IST end
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();
+
         localStorage.TX = false;
         localStorage.readOnly = true;
 

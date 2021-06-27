@@ -73,6 +73,9 @@ public class IST {
             }
             // check if rebuild is needed & update curNode if it changed. TODO: maybe check rebuild at the end of the operation
             curNode = checkAndHelpRebuild(curNode, parentNode, idx);
+            if(!curNode.isInner) { // corner case of a rebuild with all empty leaves
+                return curNode;
+            }
         }
     }
 
@@ -166,6 +169,9 @@ public class IST {
 
     ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index){
         LocalStorage localStorage = TX.lStorage.get();
+        if(!root.isInner){
+            return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
+        }
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
             //root.inner.rebuildObject.helpRebuild();
             return checkAndHelpRebuild( parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
@@ -233,10 +239,13 @@ public class IST {
     public void _checkRep(ISTNode curNode, ArrayList<Pair<Integer, String>> path){
 
         if (!curNode.isInner){ // validate path
-            Integer key = curNode.single.key;
-            for(Pair<Integer, String> pair: path){
-                if (pair.snd.equals("right")) assert key >= pair.fst : "key: " + key + ", Path: " + path.toString();
-                else if (pair.snd.equals("left")) assert key < pair.fst : "key: " + key + ", Path: " + path.toString();
+            if(!curNode.single.isEmpty) {
+                Integer key = curNode.single.key;
+                for (Pair<Integer, String> pair : path) {
+                    if (pair.snd.equals("right")) assert key >= pair.fst : "key: " + key + ", Path: " + path.toString();
+                    else if (pair.snd.equals("left"))
+                        assert key < pair.fst : "key: " + key + ", Path: " + path.toString();
+                }
             }
         } else { // inner node
             int i=0;
