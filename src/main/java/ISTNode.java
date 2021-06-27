@@ -1,14 +1,43 @@
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ISTNode {
     Integer minKey; // minKey in the keys of the node ONLY
     Integer maxKey; // maxKey in the keys of the node ONLY
+    ISTInnerNode inner;
+    ISTSingleNode single;
+    boolean isInner;
     // lock & version parameters: (copied from LNode)
     private static final long lockMask = 0x1000000000000000L;
     private static final long deleteMask = 0x2000000000000000L;
     private static final long singletonMask = 0x4000000000000000L;
     private static final long versionNegMask = lockMask | deleteMask | singletonMask;
     private AtomicLong versionAndFlags = new AtomicLong();
+
+    public ISTNode(List<ISTNode> childrenList, int leaves){
+        inner = new ISTInnerNode(childrenList, leaves);
+        single = null;
+        isInner = true;
+        minKey = inner.keys.get(0);
+        maxKey = inner.keys.get(inner.keys.size()-1);
+    }
+
+    public ISTNode(int numOfChildrenReceived, int leaves){
+        minKey = 0;
+        maxKey = 0;
+        inner = new ISTInnerNode(numOfChildrenReceived, leaves);
+        single = null;
+        isInner = true;
+    }
+
+    public ISTNode(Integer key, Object value, boolean isEmpty){
+        inner = null;
+        single = new ISTSingleNode(key, value, isEmpty);
+        isInner = false;
+        this.minKey = key;
+        this.maxKey = key;
+    }
+
     // lock methods copied from LNode:
 
     protected boolean tryLock() {

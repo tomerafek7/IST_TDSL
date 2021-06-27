@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ISTInnerNode extends ISTNode{
+public class ISTInnerNode {
     int numOfChildren;
     ArrayList<Integer> keys;
     ArrayList<ISTNode> children;
@@ -17,30 +17,26 @@ public class ISTInnerNode extends ISTNode{
     // TODO: add lock list for commit-time locking
 
 
-    public ISTInnerNode(List<ISTSingleNode> childrenList, int leaves){
+    public ISTInnerNode(List<ISTNode> childrenList, int leaves){
         numOfLeaves = 0;
         finishedCount = false;
         updateCount = 0;
         activeTX = new AtomicInteger();
         waitQueueIndex = new AtomicInteger();
         numOfChildren = childrenList.size();
-        children = new ArrayList<ISTNode>(childrenList);
+        children = new ArrayList<>(childrenList);
         //rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
 //        children = childrenList; TODO: maybe this is valid and better
 
         for (int i=1; i<childrenList.size(); i++){
-            keys.add(childrenList.get(i).key);
+            keys.add(childrenList.get(i).single.key);
         }
 
-        minKey = keys.get(0);
-        maxKey = keys.get(keys.size()-1);
     }
 
     public ISTInnerNode(int numOfChildrenReceived, int leaves) {
-        minKey = 0;
-        maxKey = 0;
         numOfLeaves = leaves;
         finishedCount = false;
         updateCount = 0;

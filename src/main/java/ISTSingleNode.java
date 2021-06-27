@@ -1,4 +1,4 @@
-public class ISTSingleNode extends ISTNode{
+public class ISTSingleNode {
     Integer key;
     Object value;
     boolean isEmpty;
@@ -7,8 +7,6 @@ public class ISTSingleNode extends ISTNode{
        this.key = key;
        this.value = value;
        this.isEmpty = isEmpty;
-       this.minKey = key;
-       this.maxKey = key;
     }
 
     @Override
