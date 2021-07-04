@@ -169,7 +169,7 @@ public class ISTTXTest {
     @Test
     public void complexMultiThreadTest() throws InterruptedException {
         IST myTree = new IST();
-        int numThreads = 1000;
+        int numThreads = 10;
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();

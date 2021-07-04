@@ -178,7 +178,7 @@ public class IST {
             return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
         }
         if(root.inner.activeThreadsSet.contains(localStorage.tid)){ // free pass - in case this TX is already inside this node
-            assert (root.inner.activeTX.get() != -1); // someone else cannot start rebuild because this thread is inside the node, just to make sure..
+            assert (root.inner.activeTX.get() != -1); // no one else cannot start rebuild because this thread is inside the node, just to make sure..
             return root;
         }
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
@@ -186,10 +186,10 @@ public class IST {
             rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
             return checkAndHelpRebuild( parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
-        if (needRebuild(root)) {
+        if (needRebuild(root) && localStorage.decActiveList.isEmpty()) { // enter this only if rebuild is needed AND this TX is not active at some other node (to prevent deadlocks)
             boolean result = false;
             while (root.inner.activeTX.get() != -1) {// we wait for all transactions in sub-tree to be over and than rebuild should catch the sub-tree
-//                if(DEBUG_MODE) System.out.println("Waiting for ActiveTX to be 0. activeTX = " + root.inner.activeTX.get());
+                if(DEBUG_MODE) System.out.println("Waiting for ActiveTX to be 0. activeTX = " + root.inner.activeTX.get());
                 result = root.inner.activeTX.compareAndSet(0, -1);
             }
                 if (result){
