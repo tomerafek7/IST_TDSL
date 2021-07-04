@@ -280,9 +280,7 @@ public class TX {
         // IST - Fetch-And-Add
         for(ISTNode node : localStorage.decActiveList){
             node.inner.activeTX.decrementAndGet();
-            if(node.inner.activeTX.get() < 0){
-                int x =1 ;
-            }
+            node.inner.activeThreadsSet.remove(localStorage.tid); // cleaning this TX from all relevant nodes
         }
         for(ISTNode node : localStorage.incUpdateList){
             node.inner.updateCount++;

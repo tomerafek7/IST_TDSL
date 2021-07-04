@@ -33,9 +33,6 @@ public class IST {
         long enumerator = numKeys * ((long)key - (long)minKey);
         long denominator = (long)maxKey - (long)minKey;
         int index = (int)(enumerator/denominator);
-        if(index >= node.inner.keys.size() || index < 0){
-            int x= 1;
-        }
         Integer indexKey = node.inner.keys.get(index);
         // check estimation:
         // TODO: enhancement: recursive interpolation ?
@@ -176,8 +173,13 @@ public class IST {
 
     ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index){
         LocalStorage localStorage = TX.lStorage.get();
+        //if(DEBUG_MODE) System.out.println("Thread ID = " + localStorage.tid);
         if(!root.isInner){
             return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
+        }
+        if(root.inner.activeThreadsSet.contains(localStorage.tid)){ // free pass - in case this TX is already inside this node
+            assert (root.inner.activeTX.get() != -1); // someone else cannot start rebuild because this thread is inside the node, just to make sure..
+            return root;
         }
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
             //root.inner.rebuildObject.helpRebuild();
@@ -187,6 +189,7 @@ public class IST {
         if (needRebuild(root)) {
             boolean result = false;
             while (root.inner.activeTX.get() != -1) {// we wait for all transactions in sub-tree to be over and than rebuild should catch the sub-tree
+//                if(DEBUG_MODE) System.out.println("Waiting for ActiveTX to be 0. activeTX = " + root.inner.activeTX.get());
                 result = root.inner.activeTX.compareAndSet(0, -1);
             }
                 if (result){
@@ -205,8 +208,11 @@ public class IST {
                 return checkAndHelpRebuild(root,parent,index);
             } else{ // try to inc the active counter
                 result = root.inner.activeTX.compareAndSet(active, active+1);
-                localStorage.decActiveList.add(root);
-                if (result) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
+                if(result) {
+                    localStorage.decActiveList.add(root);
+                    root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
+                    return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
+                }
             }
         }
 
@@ -262,6 +268,9 @@ public class IST {
                     newPath.add(new Pair<>(curNode.inner.keys.get(i), "left"));
                 } else{
                     newPath.add(new Pair<>(curNode.inner.keys.get(i-1), "right"));
+                }
+                if(child == null){
+                    int x = 1;
                 }
                 _checkRep(child, newPath);
                 i++;

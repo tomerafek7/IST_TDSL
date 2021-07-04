@@ -63,7 +63,7 @@ public class ISTTXTest {
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
@@ -72,13 +72,16 @@ public class ISTTXTest {
 
 
         //System.out.println("after begin");
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             try {
                 TX.TXbegin();
-                myTree.insert(keyList.get(i), valueList.get(i));
-                //myTree.print();
-                //System.out.println(valueList.get(i));
-                Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
+                for(int j=0; j<10; j++){
+                    //System.out.println("i: " + i + " j: " + j);
+                    myTree.insert(keyList.get(i*10+j), valueList.get(i*10+j));
+                    //myTree.print();
+                    //System.out.println(valueList.get(i));
+                    Assert.assertEquals(valueList.get(i*10+j), myTree.lookup(keyList.get(i*10+j)));
+                }
             } catch (TXLibExceptions.AbortException exp) {
                 System.out.println("abort");
             } finally {
@@ -166,7 +169,7 @@ public class ISTTXTest {
     @Test
     public void complexMultiThreadTest() throws InterruptedException {
         IST myTree = new IST();
-        int numThreads = 100;
+        int numThreads = 1000;
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();

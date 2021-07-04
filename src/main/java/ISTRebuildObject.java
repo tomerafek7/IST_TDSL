@@ -12,6 +12,7 @@ public class ISTRebuildObject {
     ISTNode parent;
     boolean finishedRebuild;
     ReentrantLock lock;
+    AtomicReference<ArrayList<ReentrantLock>> childrenLocks;
 
 
     ISTRebuildObject(ISTNode oldTree, int indexInParent, ISTNode parentNode){
@@ -22,13 +23,14 @@ public class ISTRebuildObject {
         newIstTreeReference = new AtomicReference<>(null);
         newIstTree = null;
         lock = new ReentrantLock();
-
+        childrenLocks = new AtomicReference<>(null);
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
 
 
     public ISTNode buildIdealISTree(List<ISTNode> KVPairList) {
+        debugCheckKVPairsList(KVPairList);
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
             ISTNode myNode = new ISTNode(KVPairList, numOfLeaves);
@@ -36,20 +38,26 @@ public class ISTRebuildObject {
 //            myNode.children.add(KVPairList.get(0));
             return myNode;
         }
+        debugCheckKVPairsList(KVPairList);
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
         int childSize = (int) Math.floor((((double) numOfLeaves) / numChildren));
         int remainder = numOfLeaves % numChildren;
         ISTNode myNode = new ISTNode(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
+            debugCheckKVPairsList(KVPairList.subList(0, size));
+            debugCheckKVPairsList(KVPairList);
             myNode.inner.children.set(i,buildIdealISTree(KVPairList.subList(0, size)));
+            debugCheckKVPairsList(KVPairList);
             if (i != 0) {
                 myNode.inner.keys.set(i-1, KVPairList.get(0).single.key);
                 if (i == 1) myNode.minKey = KVPairList.get(0).single.key;
                 if (i == numChildren - 1) myNode.maxKey = KVPairList.get(0).single.key;
 
             }
+            debugCheckKVPairsList(KVPairList);
             KVPairList = KVPairList.subList(size, KVPairList.size());
+            debugCheckKVPairsList(KVPairList);
         }
         return myNode;
 
@@ -59,15 +67,16 @@ public class ISTRebuildObject {
                                                    ISTNode currentNode, int numKeysToSkip, int numKeysToAdd) {
         for (int i = 0; i < currentNode.inner.numOfChildren; i++) {
             ISTNode child = currentNode.inner.children.get(i);
-            if (!child.isInner  && (!child.single.isEmpty)) { //child is single and not empty
-                if (numKeysToSkip > 0) {
-                    numKeysToSkip--;
-                } else { //here we found a single node that should be added.
-                    list.add(child);
-                    if (--numKeysToAdd == 0) return list;
-
+            if (!child.isInner) { //child is single
+                if (!child.single.isEmpty) { // child is not empty
+                    if (numKeysToSkip > 0) {
+                        numKeysToSkip--;
+                    } else { //here we found a single node that should be added.
+                        list.add(child);
+                        if (--numKeysToAdd == 0) return list;
+                    }
                 }
-            } else if (child.isInner) { //child is inner node
+            } else { //child is inner node
                 if (numKeysToSkip > (child.inner).numOfLeaves) {
                     numKeysToSkip -= (child.inner).numOfLeaves;
                 } else if (numKeysToSkip + numKeysToAdd <= (child.inner).numOfLeaves) { // all of the children are in this subtree
@@ -90,9 +99,13 @@ public class ISTRebuildObject {
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTNode> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
+        debugCheckKVPairsList(List);
         //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
         ISTNode child = buildIdealISTree(List);
         if (index != 0){
+            if (List.get(0).single == null){
+                int x = 1;
+            }
             int key =  List.get(0).single.key;
             newIstTree.inner.keys.set(index -1, key);
             if (index == 1) {
@@ -102,7 +115,8 @@ public class ISTRebuildObject {
             }
         }
         //TODO: might be a rebuild above us, can optimize
-        if (lock.tryLock()) { // if someone else caught the lock this rebuilt sub tree is no longer necessary
+        if (true) { // if someone else caught the lock this rebuilt sub tree is no longer necessary
+            lock.lock();
             try {
                 if (newIstTree.inner.children.get(index) == null) {// TODO first : compare this with AtomicReference
                     newIstTree.inner.children.set(index, child);
@@ -116,9 +130,10 @@ public class ISTRebuildObject {
 
     void createIdealCollaborative(int keyCount) {
         ISTNode tempNewIstTree;
-        if (keyCount < COLLABORATION_THRESHOLD) {
+        if (keyCount <= COLLABORATION_THRESHOLD) {
             ArrayList<ISTNode> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
+            debugCheckKVPairsList(list);
             tempNewIstTree = buildIdealISTree(list);
         }
         else {
@@ -128,15 +143,19 @@ public class ISTRebuildObject {
         newIstTree = newIstTreeReference.get();
 
 
-       if (keyCount > COLLABORATION_THRESHOLD) {
+       if (keyCount > COLLABORATION_THRESHOLD) { // collaboration case
+           // each thread creates lock list
            ArrayList<ReentrantLock> locks = new ArrayList<>();
            for (int i=0; i<newIstTree.inner.numOfChildren; i++){ // init array as nulls
-               locks.add(null);
+               locks.add(new ReentrantLock());
            }
+           // only one thread manages to insert his list
+           childrenLocks.compareAndSet(null, locks);
+           locks = childrenLocks.get();
            while (true) {
                int index = newIstTree.inner.waitQueueIndex.getAndIncrement() ;
-               if (index == newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
-               locks.set(index, new ReentrantLock());
+               if (index >= newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
+               //locks.set(index, new ReentrantLock()); // not needed because we set the locks above
                rebuildAndSetChild(keyCount, index, locks.get(index));
            }
            for (int i=0; i<newIstTree.inner.numOfChildren; i ++){
@@ -199,6 +218,7 @@ public class ISTRebuildObject {
             try {
                 if (parent.inner.children.get(indexInParent) == oldIstTree) {
                     parent.inner.children.set(indexInParent, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
+                    finishedRebuild = true;
                 }
             }
             finally {
@@ -210,5 +230,13 @@ public class ISTRebuildObject {
 
         }
         return true;
+    }
+
+    public void debugCheckKVPairsList(List<ISTNode> list){
+        for(ISTNode node: list){
+            if(node.single == null){
+                int x = 1;
+            }
+        }
     }
 }

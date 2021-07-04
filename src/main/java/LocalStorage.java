@@ -20,6 +20,7 @@ public class LocalStorage {
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
     protected ArrayList<ISTNode> decActiveList = new ArrayList<>();
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
+    protected long tid = Thread.currentThread().getId();
 
 
     // with ArrayList all nodes will be added to the list
