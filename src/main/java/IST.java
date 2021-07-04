@@ -197,7 +197,6 @@ public class IST {
                 return checkAndHelpRebuild(root,parent,index);
             } else{ // try to inc the active counter
                 result = root.inner.activeTX.compareAndSet(active, active+1);
-                assert (result);
                 localStorage.decActiveList.add(root);
                 if (result) return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
             }

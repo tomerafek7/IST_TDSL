@@ -9,13 +9,13 @@ import java.util.concurrent.CountDownLatch;
 
 public class ISTTXTest {
 
-    @Test
-    public void randomTest(){
+    //    @Test
+    public void randomTest() {
         IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        for (int i=0; i<1000; i++) {
+        for (int i = 0; i < 1000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
@@ -51,19 +51,19 @@ public class ISTTXTest {
                 Assert.assertNull(myTree.lookup(keyList.get(i)));
             }
         } catch (TXLibExceptions.AbortException exp) {
-        System.out.println("abort");
+            System.out.println("abort");
         } finally {
-        TX.TXend();
+            TX.TXend();
         }
     }
 
     @Test
-    public void randomTest3(){
+    public void randomTest3() {
         IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        for (int i=0; i<1000; i++) {
+        for (int i = 0; i < 1000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
@@ -109,49 +109,49 @@ public class ISTTXTest {
     }
 
     //@Test
-    public void randomTest2(){
+    public void randomTest2() {
         IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        for (int i=0; i<10000; i++) {
+        for (int i = 0; i < 10000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
         Collections.shuffle(keyList, rand);
         Collections.shuffle(valueList, rand);
 
-        for (int i=0; i<10000; i++) {
-            myTree.insert(keyList.get(i),valueList.get(i));
+        for (int i = 0; i < 10000; i++) {
+            myTree.insert(keyList.get(i), valueList.get(i));
             //System.out.println(valueList.get(i));
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
-            if (i%1000 == 0 && i!=0) {
+            if (i % 1000 == 0 && i != 0) {
                 IST.debugPrintNumLeaves(myTree.root.inner.children.get(0));
             }
         }
-        for (int i=0; i<10000; i++) {
+        for (int i = 0; i < 10000; i++) {
             Assert.assertEquals(valueList.get(i), myTree.lookup(keyList.get(i)));
         }
 
-        for (int i=0; i<10000; i++) {
+        for (int i = 0; i < 10000; i++) {
             //System.out.println(keyList.get(i));
             myTree.remove(keyList.get(i));
             Assert.assertNull(myTree.lookup(keyList.get(i)));
-            if (i%1000 == 0 && i!=0) {
+            if (i % 1000 == 0 && i != 0) {
                 IST.debugPrintNumLeaves(myTree.root.inner.children.get(0));
             }
         }
     }
 
     @Test
-    public void simpleMultiThreadTest() throws InterruptedException{
+    public void simpleMultiThreadTest() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         IST myTree = new IST();
         int numThreads = 10;
         Random rn = new Random(0);
         ArrayList<Thread> threads = new ArrayList<>(numThreads);
         for (int i = 0; i < numThreads; i++) {
-            threads.add(new Thread(new ISTTXTest.ISTSimpleRun("T"+i, myTree, rn.nextInt(), latch)));
+            threads.add(new Thread(new ISTTXTest.ISTSimpleRun("T" + i, myTree, rn.nextInt(), latch)));
         }
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).start();
@@ -170,7 +170,7 @@ public class ISTTXTest {
         Integer key;
         CountDownLatch latch;
 
-        public ISTSimpleRun(String name, IST tree, Integer key, CountDownLatch latch){
+        public ISTSimpleRun(String name, IST tree, Integer key, CountDownLatch latch) {
             this.name = name;
             this.tree = tree;
             this.key = key;
@@ -186,43 +186,7 @@ public class ISTTXTest {
             }
             try {
                 TX.TXbegin();
-                tree.insert(key,"abc");
-                Assert.assertEquals("abc", tree.lookup(key));
-                tree.remove(key);
-                Assert.assertNull(tree.lookup(key));
-
-            } catch (TXLibExceptions.AbortException exp) {
-                System.out.println("abort");
-            } finally {
-                TX.TXend();
-            }
-        }
-    }
-
-    public class ISTComplexRun implements Runnable {
-
-        String name;
-        IST tree;
-        Integer key;
-        CountDownLatch latch;
-
-        public ISTComplexRun(String name, IST tree, Integer key, CountDownLatch latch){
-            this.name = name;
-            this.tree = tree;
-            this.key = key;
-            this.latch = latch;
-        }
-
-        @Override
-        public void run() {
-            try {
-                latch.await();
-            } catch (InterruptedException exp) {
-                System.out.println(name + ": InterruptedException");
-            }
-            try {
-                TX.TXbegin();
-                tree.insert(key,"abc");
+                tree.insert(key, "abc");
                 Assert.assertEquals("abc", tree.lookup(key));
                 tree.remove(key);
                 Assert.assertNull(tree.lookup(key));
