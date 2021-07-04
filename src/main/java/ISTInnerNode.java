@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ISTInnerNode {
     int numOfChildren;
@@ -12,6 +13,7 @@ public class ISTInnerNode {
     int numOfLeaves; // used only in rebuild
     boolean finishedCount; // used only in rebuild
     ISTRebuildObject rebuildObject;
+    AtomicReference<ISTRebuildObject> rebuildObjectAtomicReference;
     //boolean rebuildFlag; rebuildFlag == (activeTX = -1)
     int debugNumOfLeaves; // used only in debug
     // TODO: add lock list for commit-time locking
@@ -33,6 +35,7 @@ public class ISTInnerNode {
         for (int i=1; i<childrenList.size(); i++){
             keys.add(childrenList.get(i).single.key);
         }
+        rebuildObjectAtomicReference = new AtomicReference<>(null);
 
     }
 
@@ -53,6 +56,7 @@ public class ISTInnerNode {
                 keys.add(null);
             }
         }
+        rebuildObjectAtomicReference = new AtomicReference<>(null);
     }
 
 }

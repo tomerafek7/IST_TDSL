@@ -163,6 +163,25 @@ public class ISTTXTest {
 
     }
 
+//    @Test
+//    public void complexMultiThreadTest() throws InterruptedException {
+//        IST myTree = new IST();
+//        int numThreads = 100;
+//        Random rn = new Random(0);
+//        ArrayList<Thread> threads = new ArrayList<>(numThreads);
+//        for (int i = 0; i < numThreads; i++) {
+//            threads.add(new Thread(new ISTTXTest.ISTSimpleRun("T" + i, myTree, rn.nextInt(), latch)));
+//        }
+//        for (int i = 0; i < numThreads; i++) {
+//            threads.get(i).start();
+//        }
+//        latch.countDown();
+//        for (int i = 0; i < numThreads; i++) {
+//            threads.get(i).join();
+//        }
+//
+//    }
+
     public class ISTSimpleRun implements Runnable {
 
         String name;

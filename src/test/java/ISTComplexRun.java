@@ -27,17 +27,18 @@ public class ISTComplexRun implements Runnable {
                 TX.TXbegin();
                 for (int i = 0; i < keyList.size(); i++) {
                     if (operation.equals("insert")) {
+                        System.out.println("insert: " + name);
                         tree.insert(keyList.get(i), valueList.get(i));
                     } else if (operation.equals("remove")) {
+                        System.out.println("remove: " + name);
                         if (validOperation) {
                             tree.remove(keyList.get(i));
                         } else {
                             int finalI = i;
                             Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
                         }
-
-
                     } else {
+                        System.out.println("lookup: " + name);
                         if (validOperation) {
                             Assert.assertEquals(valueList.get(i), tree.lookup(keyList.get(i)));
                         } else {

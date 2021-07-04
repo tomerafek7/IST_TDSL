@@ -30,7 +30,12 @@ public class IST {
         if (key >= maxKey) return numKeys;
 
         // estimate index:
-        int index = (numKeys * (key - minKey) / (maxKey - minKey));
+        long enumerator = numKeys * ((long)key - (long)minKey);
+        long denominator = (long)maxKey - (long)minKey;
+        int index = (int)(enumerator/denominator);
+        if(index >= node.inner.keys.size() || index < 0){
+            int x= 1;
+        }
         Integer indexKey = node.inner.keys.get(index);
         // check estimation:
         // TODO: enhancement: recursive interpolation ?
@@ -160,7 +165,9 @@ public class IST {
     }
 
     void rebuild(ISTNode rebuildRoot,ISTNode parent, int index){
-        rebuildRoot.inner.rebuildObject = new ISTRebuildObject(rebuildRoot,index,parent);
+        // try to change the atomic reference to rebuild object:
+        rebuildRoot.inner.rebuildObjectAtomicReference.compareAndSet(null, new ISTRebuildObject(rebuildRoot,index,parent));
+        rebuildRoot.inner.rebuildObject = rebuildRoot.inner.rebuildObjectAtomicReference.get(); // at this point someone must have changed the reference.
         // TODO: add if needed - result = DCSS(p.children[i], node, op, p.status, [0,⊥,⊥])
         if (rebuildRoot.inner.rebuildObject.helpRebuild()){
         }
@@ -173,16 +180,17 @@ public class IST {
             return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
         }
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
-            root.inner.rebuildObject.helpRebuild();
+            //root.inner.rebuildObject.helpRebuild();
+            rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
             return checkAndHelpRebuild( parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
             boolean result = false;
-            while (root.inner.activeTX.get() != -1) {// we wait for all transactions in sub-tree to be over and than reubild should catch the sub-tree
+            while (root.inner.activeTX.get() != -1) {// we wait for all transactions in sub-tree to be over and than rebuild should catch the sub-tree
                 result = root.inner.activeTX.compareAndSet(0, -1);
             }
                 if (result){
-                    rebuild(root, parent, index); // we "caught" the rebuild first.
+                    rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
                     return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
                 else {
