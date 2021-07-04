@@ -163,24 +163,33 @@ public class ISTTXTest {
 
     }
 
-//    @Test
-//    public void complexMultiThreadTest() throws InterruptedException {
-//        IST myTree = new IST();
-//        int numThreads = 100;
-//        Random rn = new Random(0);
-//        ArrayList<Thread> threads = new ArrayList<>(numThreads);
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTTXTest.ISTSimpleRun("T" + i, myTree, rn.nextInt(), latch)));
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).start();
-//        }
-//        latch.countDown();
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
-//
-//    }
+    @Test
+    public void complexMultiThreadTest() throws InterruptedException {
+        IST myTree = new IST();
+        int numThreads = 100;
+        Random rand = new Random(1);
+        List<Integer> keyList = new ArrayList<>();
+        List<Integer> valueList = new ArrayList<>();
+        int amountOfKeys = 10000;
+        for (int i=0; i<amountOfKeys; i++) {
+            keyList.add(rand.nextInt());
+            valueList.add(rand.nextInt());
+        }
+        ArrayList<Thread> threads = new ArrayList<>(numThreads);
+        int index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
+                    valueList.subList(index,index+(amountOfKeys/numThreads)),"insert",true)));
+            index += amountOfKeys/numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+
+    }
 
     public class ISTSimpleRun implements Runnable {
 

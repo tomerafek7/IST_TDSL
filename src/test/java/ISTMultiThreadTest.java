@@ -96,6 +96,7 @@ public class ISTMultiThreadTest
             if (threadCounter == 10000)
                 break;
         }
+        executor.shutdown();
     }
 
 
