@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 public class ISTTXTest {
 
@@ -141,4 +142,97 @@ public class ISTTXTest {
             }
         }
     }
+
+    @Test
+    public void simpleMultiThreadTest() throws InterruptedException{
+        CountDownLatch latch = new CountDownLatch(1);
+        IST myTree = new IST();
+        int numThreads = 10;
+        Random rn = new Random(0);
+        ArrayList<Thread> threads = new ArrayList<>(numThreads);
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTTXTest.ISTSimpleRun("T"+i, myTree, rn.nextInt(), latch)));
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        latch.countDown();
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+
+    }
+
+    public class ISTSimpleRun implements Runnable {
+
+        String name;
+        IST tree;
+        Integer key;
+        CountDownLatch latch;
+
+        public ISTSimpleRun(String name, IST tree, Integer key, CountDownLatch latch){
+            this.name = name;
+            this.tree = tree;
+            this.key = key;
+            this.latch = latch;
+        }
+
+        @Override
+        public void run() {
+            try {
+                latch.await();
+            } catch (InterruptedException exp) {
+                System.out.println(name + ": InterruptedException");
+            }
+            try {
+                TX.TXbegin();
+                tree.insert(key,"abc");
+                Assert.assertEquals("abc", tree.lookup(key));
+                tree.remove(key);
+                Assert.assertNull(tree.lookup(key));
+
+            } catch (TXLibExceptions.AbortException exp) {
+                System.out.println("abort");
+            } finally {
+                TX.TXend();
+            }
+        }
+    }
+
+    public class ISTComplexRun implements Runnable {
+
+        String name;
+        IST tree;
+        Integer key;
+        CountDownLatch latch;
+
+        public ISTComplexRun(String name, IST tree, Integer key, CountDownLatch latch){
+            this.name = name;
+            this.tree = tree;
+            this.key = key;
+            this.latch = latch;
+        }
+
+        @Override
+        public void run() {
+            try {
+                latch.await();
+            } catch (InterruptedException exp) {
+                System.out.println(name + ": InterruptedException");
+            }
+            try {
+                TX.TXbegin();
+                tree.insert(key,"abc");
+                Assert.assertEquals("abc", tree.lookup(key));
+                tree.remove(key);
+                Assert.assertNull(tree.lookup(key));
+
+            } catch (TXLibExceptions.AbortException exp) {
+                System.out.println("abort");
+            } finally {
+                TX.TXend();
+            }
+        }
+    }
 }
+

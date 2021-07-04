@@ -173,7 +173,7 @@ public class IST {
             return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
         }
         if (root.inner.activeTX.get() == -1) { // if (rebuild_flag)
-            //root.inner.rebuildObject.helpRebuild();
+            root.inner.rebuildObject.helpRebuild();
             return checkAndHelpRebuild( parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         if (needRebuild(root)) {
@@ -182,7 +182,7 @@ public class IST {
                 result = root.inner.activeTX.compareAndSet(0, -1);
             }
                 if (result){
-                    rebuild(root, parent, index); // we "catched" the rebuild first.
+                    rebuild(root, parent, index); // we "caught" the rebuild first.
                     return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
                 }
                 else {
