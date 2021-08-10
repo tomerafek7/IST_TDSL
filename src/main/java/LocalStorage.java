@@ -19,7 +19,7 @@ public class LocalStorage {
     protected HashMap<ISTNode, ISTNode> ISTWriteSet = new HashMap<>();
     protected HashMap<ISTNode, ISTNode> ISTInverseWriteSet = new HashMap<>();  // maintaining a map of newNode -> oldNode
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
-    protected ArrayList<ISTNode> decActiveList = new ArrayList<>();
+    protected HashSet<ISTNode> decActiveList = new HashSet<>();
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
     protected long tid = Thread.currentThread().getId();
 

@@ -90,8 +90,8 @@ public class ISTNode {
     protected void incrementRebuildCounter(long TxNum) {
         int count = this.inner.updateCount++;
         if (count > (this.inner.numOfLeaves * REBUILD_THRESHOLD) && count > MIN_UPDATES_FOR_REBUILD &&
-                this.inner.needRebuildVersion != -1L) {
-            this.inner.needRebuildVersion = TxNum;
+                this.inner.needRebuildVersion == -1L) {
+            this.inner.needRebuildVersion = TX.TxCounter.get();
         }
     }
 

@@ -1,5 +1,9 @@
 import org.junit.Assert;
 
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 public class ISTComplexRun implements Runnable {
@@ -26,6 +30,7 @@ public class ISTComplexRun implements Runnable {
         while (true) {
             try {
                 try {
+                    //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
                     TX.TXbegin();
                     for (int i = 0; i < keyList.size(); i++) {
                         String op = operation;
@@ -34,10 +39,10 @@ public class ISTComplexRun implements Runnable {
                             else op = "remove";
                         }
                         if (op.equals("insert")) {
-                            System.out.println("insert: " + name + ", key: " + keyList.get(i));
+                            TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i));
                             tree.insert(keyList.get(i), valueList.get(i));
                         } else if (op.equals("remove")) {
-                            System.out.println("remove: " + name);
+                            TX.print("remove: " + name);
                             if (validOperation) {
                                 tree.remove(keyList.get(i));
                             } else {
@@ -45,7 +50,7 @@ public class ISTComplexRun implements Runnable {
                                 Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
                             }
                         } else { // lookup
-                            System.out.println("lookup: " + name);
+                            TX.print("lookup: " + name);
                             if (validOperation) {
                                 Assert.assertEquals(valueList.get(i), tree.lookup(keyList.get(i)));
                             } else {
@@ -54,12 +59,17 @@ public class ISTComplexRun implements Runnable {
 
                         }
                     }
+                } catch (TXLibExceptions.AbortException exp){
+                    TX.print("********__FAILED__********");
+                    //System.exit(1);
                 } finally {
                     TX.TXend();
+                    tree.debugCheckRebuild();
+                    tree.checkLevels();
                 }
             } catch (TXLibExceptions.AbortException exp) {
-                System.out.println("abort");
-                continue;
+                TX.print("abort");
+                //continue;
             }
             break;
         }

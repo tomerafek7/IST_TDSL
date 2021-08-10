@@ -17,7 +17,7 @@ public class ISTInnerNode {
     boolean finishedCount; // used only in rebuild
     ISTRebuildObject rebuildObject;
     AtomicReference<ISTRebuildObject> rebuildObjectAtomicReference;
-    // HashSet<Long> activeThreadsSet;
+    HashSet<Long> activeThreadsSet;
     //boolean rebuildFlag; rebuildFlag == (activeTX = -1)
     int debugNumOfLeaves; // used only in debug
 
@@ -36,7 +36,7 @@ public class ISTInnerNode {
         debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
         rebuildObjectAtomicReference = new AtomicReference<>(null);
-        // activeThreadsSet = new HashSet<>();
+        activeThreadsSet = new HashSet<>();
 //        children = childrenList; TODO: maybe this is valid and better
 
         for (int i=0; i<childrenList.size(); i++){
@@ -59,7 +59,7 @@ public class ISTInnerNode {
 //        rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>();
-        // activeThreadsSet = new HashSet<>();
+        activeThreadsSet = new HashSet<>();
         rebuildObjectAtomicReference = new AtomicReference<>(null);
         children = new ArrayList<ISTNode> (numOfChildrenReceived);
         for (int i = 0; i<numOfChildrenReceived;i++){//we need to intitialize all the objects in the list

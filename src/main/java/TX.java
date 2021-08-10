@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,13 +11,13 @@ public class TX {
 
     public static final boolean DEBUG_MODE_LL = false;
     public static final boolean DEBUG_MODE_QUEUE = false;
-    private static final boolean DEBUG_MODE_TX = false;
+    private static final boolean DEBUG_MODE_TX = true;
     private static final boolean DEBUG_MODE_VERSION = false;
 
     protected static ThreadLocal<LocalStorage> lStorage = ThreadLocal.withInitial(LocalStorage::new);
 
     private static AtomicLong GVC = new AtomicLong(); // original GVC
-    private static AtomicLong TxCounter = new AtomicLong(); // used to maintain order between TXs - IST
+    public static AtomicLong TxCounter = new AtomicLong(); // used to maintain order between TXs - IST
 
     // stats:
     public static AtomicInteger abortCount = new AtomicInteger(0);
@@ -28,10 +30,6 @@ public class TX {
         return GVC.incrementAndGet();
     }
 
-    protected static long incrementAndGetTxCounter() {
-        return TxCounter.incrementAndGet();
-    }
-
     public static void TXbegin() {
 
         if (DEBUG_MODE_TX) {
@@ -41,7 +39,7 @@ public class TX {
         LocalStorage localStorage = lStorage.get();
         localStorage.TX = true;
         localStorage.readVersion = getVersion();
-        localStorage.TxNum = incrementAndGetTxCounter();
+        localStorage.TxNum = TxCounter.incrementAndGet();
     }
 
     public static boolean TXend() throws TXLibExceptions.AbortException {
@@ -290,12 +288,23 @@ public class TX {
         // IST - Fetch-And-Add
         for(ISTNode node : localStorage.decActiveList){
             node.inner.activeTX.decrementAndGet();
-            // node.inner.activeThreadsSet.remove(localStorage.tid); // cleaning this TX from all relevant nodes
+//            while(true){
+//                int active = node.inner.activeTX.get();
+//                boolean result = node.inner.activeTX.compareAndSet(active, active-1);
+//                if(result) break;
+//            }
+            if(node.inner.activeTX.get() < 0) {
+                TX.print("NODE: " + node + " (TID: " + localStorage.tid + ") TXend: ActiveTX = " + node.inner.activeTX.get());
+            }
+            if(!node.inner.activeThreadsSet.remove(localStorage.tid)){ // cleaning this TX from all relevant nodes)
+                 TX.print("Cannot find TID = " + localStorage.tid + " in " + node.inner.activeThreadsSet.toString());
+            }
         }
-        for(ISTNode node : localStorage.incUpdateList){
-            node.incrementRebuildCounter(localStorage.TxNum);
+        if(!abort) {
+            for (ISTNode node : localStorage.incUpdateList) {
+                node.incrementRebuildCounter(localStorage.TxNum);
+            }
         }
-
         // cleanup
 
         localStorage.queueMap.clear();
@@ -327,8 +336,23 @@ public class TX {
             throw excep.new AbortException();
         }
 
+        System.out.println("COMMITTED SUCCESSFULLY, TX = " + localStorage.TxNum);
         return true;
 
+    }
+
+    public static void print(String str){
+        try
+        {
+            String filename= "output_T" + lStorage.get().tid + ".txt";
+            FileWriter fw = new FileWriter(filename,true); //the true will append the new data
+            fw.write(str + "\n"); //appends the string to the file
+            fw.close();
+        }
+        catch(IOException ioe)
+        {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
     }
 
 }

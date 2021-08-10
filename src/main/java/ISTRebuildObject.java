@@ -209,7 +209,7 @@ public class ISTRebuildObject {
         }
         int keyCount = subTreeCount(oldIstTree);
         if(keyCount == 0){ // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
-            newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true));
+            newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true)); // empty single
             newIstTree = newIstTreeReference.get();
         } else {
             createIdealCollaborative(keyCount);
@@ -217,6 +217,9 @@ public class ISTRebuildObject {
         if (lock.tryLock()){//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
             try {
                 if (parent.inner.children.get(indexInParent) == oldIstTree) {
+                    if(newIstTree.inner == null){
+                        int x = 1;
+                    }
                     parent.inner.children.set(indexInParent, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
                     finishedRebuild = true;
                 }
