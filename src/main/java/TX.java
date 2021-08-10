@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TX {
@@ -13,7 +14,11 @@ public class TX {
 
     protected static ThreadLocal<LocalStorage> lStorage = ThreadLocal.withInitial(LocalStorage::new);
 
-    private static AtomicLong GVC = new AtomicLong();
+    private static AtomicLong GVC = new AtomicLong(); // original GVC
+    private static AtomicLong TxCounter = new AtomicLong(); // used to maintain order between TXs - IST
+
+    // stats:
+    public static AtomicInteger abortCount = new AtomicInteger(0);
 
     protected static long getVersion() {
         return GVC.get();
@@ -21,6 +26,10 @@ public class TX {
 
     protected static long incrementAndGetVersion() {
         return GVC.incrementAndGet();
+    }
+
+    protected static long incrementAndGetTxCounter() {
+        return TxCounter.incrementAndGet();
     }
 
     public static void TXbegin() {
@@ -32,6 +41,7 @@ public class TX {
         LocalStorage localStorage = lStorage.get();
         localStorage.TX = true;
         localStorage.readVersion = getVersion();
+        localStorage.TxNum = incrementAndGetTxCounter();
     }
 
     public static boolean TXend() throws TXLibExceptions.AbortException {
@@ -280,10 +290,10 @@ public class TX {
         // IST - Fetch-And-Add
         for(ISTNode node : localStorage.decActiveList){
             node.inner.activeTX.decrementAndGet();
-            node.inner.activeThreadsSet.remove(localStorage.tid); // cleaning this TX from all relevant nodes
+            // node.inner.activeThreadsSet.remove(localStorage.tid); // cleaning this TX from all relevant nodes
         }
         for(ISTNode node : localStorage.incUpdateList){
-            node.inner.updateCount++;
+            node.incrementRebuildCounter(localStorage.TxNum);
         }
 
         // cleanup
@@ -312,6 +322,7 @@ public class TX {
         }
 
         if (abort) {
+            abortCount.incrementAndGet();
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }

@@ -7,6 +7,7 @@ public class LocalStorage {
 
     protected long readVersion = 0L;
     protected long writeVersion = 0L; // for debug
+    protected long TxNum = 0L; // to maintain order between TXs - IST
     protected boolean TX = false;
     protected boolean readOnly = true;
     protected HashMap<Queue, LocalQueue> queueMap = new HashMap<Queue, LocalQueue>();

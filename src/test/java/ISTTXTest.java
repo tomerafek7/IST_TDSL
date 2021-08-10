@@ -57,13 +57,13 @@ public class ISTTXTest {
         }
     }
 
-    @Test
+    //@Test
     public void randomTest3() {
         IST myTree = new IST();
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100000; i++) {
             keyList.add(i);
             valueList.add(i);
         }
@@ -72,10 +72,10 @@ public class ISTTXTest {
 
 
         //System.out.println("after begin");
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             try {
                 TX.TXbegin();
-                for(int j=0; j<10; j++){
+                for(int j=0; j<100; j++){
                     //System.out.println("i: " + i + " j: " + j);
                     myTree.insert(keyList.get(i*10+j), valueList.get(i*10+j));
                     //myTree.print();
@@ -146,7 +146,7 @@ public class ISTTXTest {
         }
     }
 
-    @Test
+    //@Test
     public void simpleMultiThreadTest() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         IST myTree = new IST();
@@ -169,11 +169,11 @@ public class ISTTXTest {
     @Test
     public void complexMultiThreadTest() throws InterruptedException {
         IST myTree = new IST();
-        int numThreads = 10;
+        int numThreads = 100;
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 10000;
+        int amountOfKeys = 100000;
         for (int i=0; i<amountOfKeys; i++) {
             keyList.add(rand.nextInt());
             valueList.add(rand.nextInt());
@@ -191,6 +191,22 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
+
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
+                    valueList.subList(index,index+(amountOfKeys/numThreads)),"mixed",true)));
+            index += amountOfKeys/numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+
+        System.out.println("Num Of Aborts = " + TX.abortCount);
 
     }
 
@@ -216,16 +232,17 @@ public class ISTTXTest {
                 System.out.println(name + ": InterruptedException");
             }
             try {
-                TX.TXbegin();
-                tree.insert(key, "abc");
-                Assert.assertEquals("abc", tree.lookup(key));
-                tree.remove(key);
-                Assert.assertNull(tree.lookup(key));
-
+                try {
+                    TX.TXbegin();
+                    tree.insert(key, "abc");
+                    Assert.assertEquals("abc", tree.lookup(key));
+                    tree.remove(key);
+                    Assert.assertNull(tree.lookup(key));
+                } finally {
+                    TX.TXend();
+               }
             } catch (TXLibExceptions.AbortException exp) {
                 System.out.println("abort");
-            } finally {
-                TX.TXend();
             }
         }
     }
