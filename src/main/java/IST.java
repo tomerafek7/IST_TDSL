@@ -248,6 +248,32 @@ public class IST {
         }
     }
 
+    public void checkLevels(){
+        ArrayList<Integer> numSingles= new ArrayList<>(100);
+        ArrayList<Integer> numInners= new ArrayList<>(100);
+        for (int i = 0; i<100; i++){
+            numSingles.add(i, 0);
+            numInners.add(i,0);
+        }
+        _checkLevels(root,1,numSingles,numInners);
+        for (int i = 1; i<100; i++){
+            if (numSingles.get(i) == 0 && numInners.get(i) == 0){continue;}
+            System.out.println( "level :" + i + "  singles:" + numSingles.get(i) + "  inners : " + numInners.get(i));
+        }
+    }
+    public void  _checkLevels(ISTNode curNode,Integer level ,ArrayList<Integer> numSingles,ArrayList<Integer> numInners) {
+        if (!curNode.isInner) {
+            numSingles.set(level, numSingles.get(level)+1);
+        } else {
+            numInners.set(level, numInners.get(level) + 1);
+            for (int i = curNode.inner.numOfChildren - 1; i >= 0; i--) {
+
+
+                _checkLevels(curNode.inner.children.get(i), level + 1, numSingles, numInners);
+            }
+        }
+    }
+
     // check that the tree structure is correct
     public void checkRep(){
         _checkRep(root, new ArrayList<>());
