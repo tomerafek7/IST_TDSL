@@ -15,6 +15,7 @@ public class ISTComplexRun implements Runnable {
     String operation;
     boolean validOperation;
     static double INSERT_PERCENT = 0.5;
+    static int NUM_OPS_PER_TX = 20;
 
     public ISTComplexRun(String name, IST tree, List<Integer> keyList, List<Integer> valueList, String operation, boolean validOperation){
         this.name = name;
@@ -27,51 +28,55 @@ public class ISTComplexRun implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            try {
+        for (int i = 0; i < keyList.size() / NUM_OPS_PER_TX; i++) {
+            while (true) {
                 try {
-                    //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
-                    TX.TXbegin();
-                    for (int i = 0; i < keyList.size(); i++) {
-                        String op = operation;
-                        if(operation.equals("mixed")){
-                            if(i % 10 < 10*INSERT_PERCENT) op = "insert";
-                            else op = "remove";
-                        }
-                        if (op.equals("insert")) {
-                            TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i));
-                            tree.insert(keyList.get(i), valueList.get(i));
-                        } else if (op.equals("remove")) {
-                            TX.print("remove: " + name);
-                            if (validOperation) {
-                                tree.remove(keyList.get(i));
-                            } else {
-                                int finalI = i;
-                                Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
+                    try {
+                        //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
+                        TX.TXbegin();
+                        for (int j = 0; j < NUM_OPS_PER_TX; j++) {
+                            String op = operation;
+                            if (operation.equals("mixed")) {
+                                if (j % 10 < 10 * INSERT_PERCENT) op = "insert";
+                                else op = "remove";
                             }
-                        } else { // lookup
-                            TX.print("lookup: " + name);
-                            if (validOperation) {
-                                Assert.assertEquals(valueList.get(i), tree.lookup(keyList.get(i)));
-                            } else {
-                                Assert.assertNull(tree.lookup(keyList.get(i)));
-                            }
+                            if (op.equals("insert")) {
+                                TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i * NUM_OPS_PER_TX + j));
+                                tree.insert(keyList.get(i * NUM_OPS_PER_TX + j), valueList.get(i * NUM_OPS_PER_TX + j));
+                                Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
+                            } else if (op.equals("remove")) {
+                                TX.print("remove: " + name);
+                                if (validOperation) {
+                                    tree.remove(keyList.get(i * NUM_OPS_PER_TX + j));
+                                } else {
+                                    int finalI = i;
+                                    Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
+                                }
+                            } else { // lookup
+                                TX.print("lookup: " + name);
+                                if (validOperation) {
+                                    Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
+                                } else {
+                                    Assert.assertNull(tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
+                                }
 
+                            }
                         }
+                    } catch (TXLibExceptions.AbortException exp) {
+                        TX.print("********__FAILED__********");
+                        //System.exit(1);
+                    } finally {
+                        TX.TXend();
+                        tree.debugCheckRebuild();
+                        tree.checkLevels();
                     }
-                } catch (TXLibExceptions.AbortException exp){
-                    TX.print("********__FAILED__********");
-                    //System.exit(1);
-                } finally {
-                    TX.TXend();
-                    tree.debugCheckRebuild();
-                    tree.checkLevels();
+                } catch (TXLibExceptions.AbortException exp) {
+                    TX.print("abort");
+                    continue;
                 }
-            } catch (TXLibExceptions.AbortException exp) {
-                TX.print("abort");
-                //continue;
+                break;
             }
-            break;
+            //break;
         }
     }
 }

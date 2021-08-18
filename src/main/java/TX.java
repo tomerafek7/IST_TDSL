@@ -32,20 +32,21 @@ public class TX {
 
     public static void TXbegin() {
 
-        if (DEBUG_MODE_TX) {
-            System.out.println("TXbegin");
-        }
-
         LocalStorage localStorage = lStorage.get();
         localStorage.TX = true;
         localStorage.readVersion = getVersion();
         localStorage.TxNum = TxCounter.incrementAndGet();
+
+        if (DEBUG_MODE_TX) {
+            TX.print("TXbegin");
+            System.out.println("(TID = " + localStorage.tid + ") TXbegin");
+        }
     }
 
     public static boolean TXend() throws TXLibExceptions.AbortException {
 
         if (DEBUG_MODE_TX) {
-            System.out.println("TXend");
+            TX.print("TXend");
         }
 
         boolean abort = false;
@@ -237,16 +238,31 @@ public class TX {
             // IST
             for (Entry<ISTNode, ISTNode> entry : ISTWriteSet.entrySet()) {
 //                ISTWriteElement we = entry.getValue();
-                ISTNode newNode = entry.getValue();
+                ISTNode fakeNode = entry.getValue();
                 ISTNode node = entry.getKey();
-                if(newNode.isInner) { // single --> inner
-                    node.changeToInner(newNode.inner);
+                node.setVersion(writeVersion);
+                if(fakeNode.isInner) { // single --> inner
+                    if (node.isInner){
+                        int x = 1;
+                    }
+                    assert !node.isInner;
+                    node.inner = fakeNode.inner;
+                    node.minKey = node.inner.keys.get(0);
+                    node.maxKey = node.inner.keys.get(node.inner.keys.size()-1);
+                    node.single = null;
+                    node.isInner = true;
                 } else { // single --> single
-                    node.single.key = newNode.single.key;
-                    node.single.value = newNode.single.value;
-                    node.single.isEmpty = newNode.single.isEmpty;
-                    node.setVersion(writeVersion);
+                    node.single = fakeNode.single;
+                    assert !node.isInner;
+                    assert node.inner == null;
                 }
+//                    node.changeToInner(newNode.inner);
+//                } else { // single --> single
+//                    node.single.key = newNode.single.key;
+//                    node.single.value = newNode.single.value;
+//                    node.single.isEmpty = newNode.single.isEmpty;
+//                    node.setVersion(writeVersion);
+//                }
             }
         }
 
@@ -294,7 +310,7 @@ public class TX {
 //                if(result) break;
 //            }
             if(node.inner.activeTX.get() < 0) {
-                TX.print("NODE: " + node + " (TID: " + localStorage.tid + ") TXend: ActiveTX = " + node.inner.activeTX.get());
+                TX.print("NODE: " + node + " (TID: " + localStorage.tid + ") TXend: ActiveTX = " + node.inner.activeTX.get() + "Clear Flag = " + localStorage.debugClear);
             }
             if(!node.inner.activeThreadsSet.remove(localStorage.tid)){ // cleaning this TX from all relevant nodes)
                  TX.print("Cannot find TID = " + localStorage.tid + " in " + node.inner.activeThreadsSet.toString());
@@ -312,10 +328,11 @@ public class TX {
         localStorage.readSet.clear();
         // IST
         localStorage.ISTWriteSet.clear();
-        localStorage.ISTInverseWriteSet.clear();
+//        localStorage.ISTInverseWriteSet.clear();
         localStorage.ISTReadSet.clear();
         localStorage.decActiveList.clear();
         localStorage.incUpdateList.clear();
+        localStorage.debugClear = 0;
         // IST end
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();
@@ -325,9 +342,9 @@ public class TX {
 
         if (DEBUG_MODE_TX) {
             if (abort) {
-                System.out.println("TXend - aborted");
+                TX.print("TXend - aborted");
             }
-            System.out.println("TXend - is done");
+            TX.print("TXend - is done");
         }
 
         if (abort) {
@@ -336,7 +353,7 @@ public class TX {
             throw excep.new AbortException();
         }
 
-        System.out.println("COMMITTED SUCCESSFULLY, TX = " + localStorage.TxNum);
+        TX.print("COMMITTED SUCCESSFULLY, TX = " + localStorage.TxNum);
         return true;
 
     }

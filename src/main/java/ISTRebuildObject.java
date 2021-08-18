@@ -13,6 +13,7 @@ public class ISTRebuildObject {
     boolean finishedRebuild;
     ReentrantLock lock;
     AtomicReference<ArrayList<ReentrantLock>> childrenLocks;
+    int isFirst; // debug - remove
 
 
     ISTRebuildObject(ISTNode oldTree, int indexInParent, ISTNode parentNode){
@@ -24,6 +25,7 @@ public class ISTRebuildObject {
         newIstTree = null;
         lock = new ReentrantLock();
         childrenLocks = new AtomicReference<>(null);
+        isFirst = 0;
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
@@ -142,7 +144,6 @@ public class ISTRebuildObject {
         newIstTreeReference.compareAndSet(null,tempNewIstTree);
         newIstTree = newIstTreeReference.get();
 
-
        if (keyCount > COLLABORATION_THRESHOLD) { // collaboration case
            // each thread creates lock list
            ArrayList<ReentrantLock> locks = new ArrayList<>();
@@ -160,7 +161,7 @@ public class ISTRebuildObject {
            }
            for (int i=0; i<newIstTree.inner.numOfChildren; i ++){
                ISTNode child = newIstTree.inner.children.get(i);
-               if (child == null) { //can happen only in multi treading- 1 of the threads did not finish
+               if (child == null) { //can happen only in multi threading - 1 of the threads did not finish
                    if ( ! rebuildAndSetChild(keyCount,i, locks.get(i))) {
                        return; //TODO maoras: maybe not needed
                    }
@@ -204,6 +205,7 @@ public class ISTRebuildObject {
         return keyCount;
     }
     boolean helpRebuild(){
+        boolean isMaster = false;
         if (finishedRebuild){
             return false; // in this case we need to update the root (outside)
         }
@@ -212,30 +214,83 @@ public class ISTRebuildObject {
             newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true)); // empty single
             newIstTree = newIstTreeReference.get();
         } else {
+            lock.lock();
+            try {
+                if (isFirst == 0) {
+                    isFirst = 1;
+                    if (!IST.debugCheckSortedTree(oldIstTree)) {
+                        int x = 1;
+                        assert false;
+                    }
+                    boolean b = IST.rebuildCheckRep(oldIstTree);
+                    if (!b) {
+                        int x = 1;
+                        System.out.println("WE FAILED HERE");
+                        assert b;
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
             createIdealCollaborative(keyCount);
         }
-        if (lock.tryLock()){//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
+            lock.lock();//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
+                //TODO: mb change to trylock later
             try {
+                if(isFirst == 1){
+                    isFirst = 2;
+                    if (! IST.debugCheckSortedTree(newIstTree)){
+                        int x = 1;
+                        TX.print("keyCount = " + keyCount);
+                        assert false;
+                    }
+                    boolean b = IST.rebuildCheckRep(newIstTree);
+                    if(!b){
+                        int x = 1;
+                        System.out.println("WE FAILED HERE");
+                        assert b;
+                    }
+                    assert b;
+                }
+
                 if (parent.inner.children.get(indexInParent) == oldIstTree) {
                     if(newIstTree.inner == null){
                         int x = 1;
                     }
                     parent.inner.children.set(indexInParent, newIstTree); // DCSS(p.children[op.index], op, ideal, p.status, [0,⊥,⊥])
                     finishedRebuild = true;
+                    isMaster = true;
                 }
             }
             finally {
                 lock.unlock();
             }
-        }
+
         if (IST.DEBUG_MODE){
           //  IST.debugPrintNumLeaves(newIstTree);
 
         }
-        return true;
+        return isMaster;
     }
 
     public void debugCheckKVPairsList(List<ISTNode> list){
+
+        int last = 0;
+        int i=0;
+        for (ISTNode node : list){
+            if (i>0) {
+                if (node.single.key < last) {
+                    StringBuilder error = new StringBuilder();
+                    for (int j = i-5; j< i+5; j++){
+                        error.append(" ").append(list.get(j).single.key);
+                    }
+                    TX.print(error.toString());
+                    assert  false;
+                }
+            }
+            i++;
+            last = node.single.key;
+        }
         for(ISTNode node: list){
             if(node.single == null){
                 int x = 1;

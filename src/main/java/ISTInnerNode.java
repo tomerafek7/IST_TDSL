@@ -20,6 +20,7 @@ public class ISTInnerNode {
     HashSet<Long> activeThreadsSet;
     //boolean rebuildFlag; rebuildFlag == (activeTX = -1)
     int debugNumOfLeaves; // used only in debug
+    ReentrantLock debugLock;
 
     public ISTInnerNode(List<ISTNode> childrenList, int leaves){
         numOfLeaves = 0;
@@ -39,6 +40,7 @@ public class ISTInnerNode {
         activeThreadsSet = new HashSet<>();
 //        children = childrenList; TODO: maybe this is valid and better
 
+        debugLock = new ReentrantLock(); // debug
         for (int i=0; i<childrenList.size(); i++){
             if(childrenList.get(i).single == null){
                 int x = 1;
@@ -62,6 +64,7 @@ public class ISTInnerNode {
         activeThreadsSet = new HashSet<>();
         rebuildObjectAtomicReference = new AtomicReference<>(null);
         children = new ArrayList<ISTNode> (numOfChildrenReceived);
+        debugLock = new ReentrantLock(); // debug
         for (int i = 0; i<numOfChildrenReceived;i++){//we need to intitialize all the objects in the list
             children.add(null);
             if (i != 1){

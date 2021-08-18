@@ -1,14 +1,8 @@
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class ISTTXTest {
@@ -224,20 +218,40 @@ public class ISTTXTest {
 
     }
 
+    void removeOutputFiles(){
+        final File folder = new File("C:\\Users\\DELL\\IdeaProjects\\IST_TDSL");
+        final File[] files = folder.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept( final File dir,
+                                   final String name ) {
+                return name.matches( "output_T[0-9]*.txt" );
+            }
+        } );
+        for ( final File file : files ) {
+            if ( !file.delete() ) {
+                System.err.println( "Can't remove " + file.getAbsolutePath() );
+            }
+        }
+    }
+
+
     @Test
     public void complexMultiThreadTest() throws InterruptedException, FileNotFoundException {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
+        // remove output_T* files before test
+        removeOutputFiles();
         IST myTree = new IST();
-        int numThreads = 5;
+        int numThreads = 10;
         Random rand = new Random(1);
-        List<Integer> keyList = new ArrayList<>();
+        HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
         int amountOfKeys = 100000;
-        for (int i=0; i<amountOfKeys; i++) {
-            keyList.add(rand.nextInt());
+        while (keySet.size() != amountOfKeys) {
+            keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());
         }
+        List<Integer> keyList =new ArrayList<>(keySet);
         ArrayList<Thread> threads = new ArrayList<>(numThreads);
         int index = 0;
         for (int i = 0; i < numThreads; i++) {
@@ -252,25 +266,26 @@ public class ISTTXTest {
             threads.get(i).join();
         }
         try {
-            myTree.checkRep();
+            myTree.checkLevels();
+            assert myTree.checkRep();
         } catch (TXLibExceptions.AbortException e){
             System.out.println("Check Rep Failed. Exiting.");
             //System.exit(1);
         }
         myTree.debugCheckRebuild();
-//        threads = new ArrayList<>(numThreads);
-//        index = 0;
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
-//                    valueList.subList(index,index+(amountOfKeys/numThreads)),"lookup",true)));
-//            index += amountOfKeys/numThreads;
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).start();
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
+                    valueList.subList(index,index+(amountOfKeys/numThreads)),"lookup",true)));
+            index += amountOfKeys/numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
 //
 //        threads = new ArrayList<>(numThreads);
 //        index = 0;
