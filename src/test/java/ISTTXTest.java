@@ -232,6 +232,19 @@ public class ISTTXTest {
                 System.err.println( "Can't remove " + file.getAbsolutePath() );
             }
         }
+        final File folder2 = new File("C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats");
+        final File[] files2 = folder2.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept( final File dir,
+                                   final String name ) {
+                return name.matches( "stats_T[0-9]*.csv" );
+            }
+        } );
+        for ( final File file : files2 ) {
+            if ( !file.delete() ) {
+                System.err.println( "Can't remove " + file.getAbsolutePath() );
+            }
+        }
     }
 
 
@@ -246,12 +259,15 @@ public class ISTTXTest {
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 100000;
+        int amountOfKeys = 300000;
         while (keySet.size() != amountOfKeys) {
             keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());
         }
         List<Integer> keyList =new ArrayList<>(keySet);
+
+        // INSERTS
+        System.out.println("Starting Inserts...\n");
         ArrayList<Thread> threads = new ArrayList<>(numThreads);
         int index = 0;
         for (int i = 0; i < numThreads; i++) {
@@ -273,6 +289,10 @@ public class ISTTXTest {
             //System.exit(1);
         }
         myTree.debugCheckRebuild();
+        System.out.println("Finished Inserts\n");
+
+        // LOOKUPS
+        System.out.println("Starting Lookups...\n");
         threads = new ArrayList<>(numThreads);
         index = 0;
         for (int i = 0; i < numThreads; i++) {
@@ -286,20 +306,30 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-//
-//        threads = new ArrayList<>(numThreads);
-//        index = 0;
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
-//                    valueList.subList(index,index+(amountOfKeys/numThreads)),"mixed",true)));
-//            index += amountOfKeys/numThreads;
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).start();
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
+        myTree.debugCheckRebuild();
+        myTree.checkLevels();
+        System.out.println("Finished Lookups\n");
+
+        // REMOVES
+        System.out.println("Starting Removes...\n");
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
+                    valueList.subList(index,index+(amountOfKeys/numThreads)),"remove",true)));
+            index += amountOfKeys/numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        myTree.debugCheckRebuild();
+        myTree.checkLevels();
+        System.out.println("Finished Removes\n");
+
+        System.out.println("Test is done!\n");
 
         System.out.println("Num Of Aborts = " + TX.abortCount);
 

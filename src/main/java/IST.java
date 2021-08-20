@@ -221,6 +221,7 @@ public class IST {
             //root.inner.rebuildObject.helpRebuild();
             rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
             assert(parent.inner.children.get(index).inner.activeTX.get() != -1) : "ERROR: AFTER REBUILD: (TID = " + localStorage.tid + ") ActiveTX shouldn't be = -1";
+            //while(parent.inner.children.get(index).inner.activeTX.get() == -10){}
             return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
         }
         //System.out.println("needRebuildVersion: " + root.inner.needRebuildVersion + ", TxNum: " + localStorage.TxNum);

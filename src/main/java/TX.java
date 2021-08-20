@@ -39,7 +39,7 @@ public class TX {
 
         if (DEBUG_MODE_TX) {
             TX.print("TXbegin");
-            System.out.println("(TID = " + localStorage.tid + ") TXbegin");
+            //System.out.println("(TID = " + localStorage.tid + ") TXbegin");
         }
     }
 
@@ -349,6 +349,7 @@ public class TX {
 
         if (abort) {
             abortCount.incrementAndGet();
+            TX.write_stats(GVC.get() + ",1");
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
@@ -363,6 +364,21 @@ public class TX {
         {
             String filename= "output_T" + lStorage.get().tid + ".txt";
             FileWriter fw = new FileWriter(filename,true); //the true will append the new data
+            fw.write(str + "\n"); //appends the string to the file
+            fw.close();
+        }
+        catch(IOException ioe)
+        {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
+    }
+
+    public static void write_stats(String str){
+        try
+        {
+            String dir = "C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats";
+            String filename= "stats_T" + lStorage.get().tid + ".csv";
+            FileWriter fw = new FileWriter(dir + "/" + filename,true); //the true will append the new data
             fw.write(str + "\n"); //appends the string to the file
             fw.close();
         }

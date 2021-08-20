@@ -12,7 +12,8 @@ public class ISTInnerNode {
     int updateCount;
     long needRebuildVersion;
     AtomicInteger activeTX; // rebuildFlag == (activeTX = -1)
-    AtomicInteger waitQueueIndex;
+    AtomicInteger waitQueueIndexCount;
+    AtomicInteger waitQueueIndexRebuild;
     int numOfLeaves; // used only in rebuild
     boolean finishedCount; // used only in rebuild
     ISTRebuildObject rebuildObject;
@@ -28,7 +29,8 @@ public class ISTInnerNode {
         updateCount = 0;
         needRebuildVersion = -1L;
         activeTX = new AtomicInteger();
-        waitQueueIndex = new AtomicInteger();
+        waitQueueIndexCount = new AtomicInteger();
+        waitQueueIndexRebuild = new AtomicInteger();
         numOfChildren = childrenList.size();
         children = new ArrayList<>(numOfChildren);
 //        children = new ArrayList<>(childrenList);
@@ -56,7 +58,8 @@ public class ISTInnerNode {
         updateCount = 0;
         needRebuildVersion = -1L;
         activeTX = new AtomicInteger();
-        waitQueueIndex = new AtomicInteger();
+        waitQueueIndexCount = new AtomicInteger();
+        waitQueueIndexRebuild = new AtomicInteger();
         numOfChildren = numOfChildrenReceived;
 //        rebuildFlag = false;
         debugNumOfLeaves = 0;

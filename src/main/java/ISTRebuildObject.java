@@ -154,7 +154,7 @@ public class ISTRebuildObject {
            childrenLocks.compareAndSet(null, locks);
            locks = childrenLocks.get();
            while (true) {
-               int index = newIstTree.inner.waitQueueIndex.getAndIncrement() ;
+               int index = newIstTree.inner.waitQueueIndexRebuild.getAndIncrement() ;
                if (index >= newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
                //locks.set(index, new ReentrantLock()); // not needed because we set the locks above
                rebuildAndSetChild(keyCount, index, locks.get(index));
@@ -179,7 +179,7 @@ public class ISTRebuildObject {
         // here node is inner
         if (curNode.inner.numOfChildren > COLLABORATION_THRESHOLD) {
             while (true) { // work queue
-                int index = curNode.inner.waitQueueIndex.getAndIncrement();
+                int index = curNode.inner.waitQueueIndexCount.getAndIncrement();
                 if (index >= curNode.inner.numOfChildren) break;
                 subTreeCount(curNode.inner.children.get(index));
             }
