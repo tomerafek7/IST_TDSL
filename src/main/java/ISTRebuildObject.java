@@ -230,7 +230,7 @@ public class ISTRebuildObject {
     }
 
     public int countChild(ISTNode node){
-        if (!node.isInner){
+        if (!node.isInner){ // TODO: we think it's unnecessary (don't get here in coverage)
             return (node.single).isEmpty ? 0 : 1;
         }
         int keyCount = 0;

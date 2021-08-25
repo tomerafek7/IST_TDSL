@@ -17,7 +17,7 @@ public class TX {
 
     protected static ThreadLocal<LocalStorage> lStorage = ThreadLocal.withInitial(LocalStorage::new);
 
-    private static AtomicLong GVC = new AtomicLong(); // original GVC
+    public static AtomicLong GVC = new AtomicLong(); // original GVC
     public static AtomicLong TxCounter = new AtomicLong(); // used to maintain order between TXs - IST
 
     // stats:

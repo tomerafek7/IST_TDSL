@@ -253,7 +253,7 @@ public class IST {
         while(true){
             int active = root.inner.activeTX.get();
             boolean result = false;
-            if(active == -10){ // rebuild started, go help
+            if(active == -10){ // rebuild has started after we passed the check above, go help
                 return checkAndHelpRebuild(parent.inner.children.get(index),parent,index,localStorage);
             } else{ // try to inc the active counter
                 result = root.inner.activeTX.compareAndSet(active, active+1);
