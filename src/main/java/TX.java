@@ -13,6 +13,7 @@ public class TX {
     public static final boolean DEBUG_MODE_QUEUE = false;
     private static final boolean DEBUG_MODE_TX = true;
     private static final boolean DEBUG_MODE_VERSION = false;
+    public static final boolean DEBUG_MODE_IST = false;
 
     protected static ThreadLocal<LocalStorage> lStorage = ThreadLocal.withInitial(LocalStorage::new);
 
