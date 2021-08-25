@@ -12,8 +12,11 @@ public class ISTRebuildObject {
     ISTNode parent;
     boolean finishedRebuild;
     ReentrantLock lock;
-    AtomicReference<ArrayList<ReentrantLock>> childrenLocks;
+    AtomicReference<ArrayList<ReentrantLock>> childrenLocksRebuild;
+    AtomicReference<ArrayList<ReentrantLock>> childrenLocksCount;
     int isFirst; // debug - remove
+    int debugSubTreeCount;
+    boolean subTreeDebugFirst;
 
 
     ISTRebuildObject(ISTNode oldTree, int indexInParent, ISTNode parentNode){
@@ -24,8 +27,10 @@ public class ISTRebuildObject {
         newIstTreeReference = new AtomicReference<>(null);
         newIstTree = null;
         lock = new ReentrantLock();
-        childrenLocks = new AtomicReference<>(null);
+        childrenLocksRebuild = new AtomicReference<>(null);
+        childrenLocksCount = new AtomicReference<>(null);
         isFirst = 0;
+        subTreeDebugFirst = true;
     }
     static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
     static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
@@ -151,8 +156,8 @@ public class ISTRebuildObject {
                locks.add(new ReentrantLock());
            }
            // only one thread manages to insert his list
-           childrenLocks.compareAndSet(null, locks);
-           locks = childrenLocks.get();
+           childrenLocksRebuild.compareAndSet(null, locks);
+           locks = childrenLocksRebuild.get();
            while (true) {
                int index = newIstTree.inner.waitQueueIndexRebuild.getAndIncrement() ;
                if (index >= newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
@@ -168,6 +173,75 @@ public class ISTRebuildObject {
                }
            }
        }
+
+    }
+
+    public int serialSubTreeCount(ISTNode curNode){
+        lock.lock();
+        try{
+            if(subTreeDebugFirst){
+                subTreeDebugFirst = false;
+                debugSubTreeCount = subTreeCount(curNode);
+            }
+        } finally {
+            lock.unlock();
+        }
+        return debugSubTreeCount;
+    }
+
+    public int subTreeCountNew(ISTNode subTreeRoot){
+
+        // create lock list
+        ArrayList<ReentrantLock> locks = new ArrayList<>();
+        for (int i=0; i<subTreeRoot.inner.numOfChildren; i++){ // init array as nulls
+            locks.add(new ReentrantLock());
+        }
+        // only one thread manages to insert his list
+        childrenLocksCount.compareAndSet(null, locks);
+        locks = childrenLocksCount.get();
+
+        if (subTreeRoot.inner.numOfChildren > 0) {
+            while (true) { // work queue
+                int index = subTreeRoot.inner.waitQueueIndexCount.getAndIncrement();
+                if (index >= subTreeRoot.inner.numOfChildren) break;
+                countAndSetChild(subTreeRoot.inner.children.get(index), locks.get(index));
+            }
+        }
+        int keyCount = 0;
+        for (int i=0; i<subTreeRoot.inner.children.size(); i++) {
+            ISTNode child = subTreeRoot.inner.children.get(i);
+            if (!child.isInner) {
+                keyCount += (child.single).isEmpty ? 0 : 1;
+            } else { // inner
+                keyCount += countAndSetChild(child, locks.get(i));
+            }
+        }
+        return keyCount;
+    }
+
+    public int countAndSetChild(ISTNode node, ReentrantLock lock){
+        lock.lock();
+        if(!node.inner.finishedCount) {
+            node.inner.numOfLeaves = countChild(node);
+            node.inner.finishedCount = true;
+        }
+        lock.unlock();
+        return node.inner.numOfLeaves;
+    }
+
+    public int countChild(ISTNode node){
+        if (!node.isInner){
+            return (node.single).isEmpty ? 0 : 1;
+        }
+        int keyCount = 0;
+        for (ISTNode child : node.inner.children){
+            if (!child.isInner){
+                keyCount += (child.single).isEmpty ? 0 : 1;
+            } else { // inner
+                keyCount += countChild(child);
+            }
+        }
+        return keyCount;
 
     }
 
@@ -204,54 +278,55 @@ public class ISTRebuildObject {
 
         return keyCount;
     }
+
     boolean helpRebuild(){
         boolean isMaster = false;
         if (finishedRebuild){
             return false; // in this case we need to update the root (outside)
         }
-        int keyCount = subTreeCount(oldIstTree);
+        int keyCount = serialSubTreeCount(oldIstTree);
         if(keyCount == 0){ // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
             newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true)); // empty single
             newIstTree = newIstTreeReference.get();
         } else {
-//            lock.lock();
-//            try {
-//                if (isFirst == 0) {
-//                    isFirst = 1;
-//                    if (!IST.debugCheckSortedTree(oldIstTree)) {
-//                        int x = 1;
-//                        assert false;
-//                    }
-//                    boolean b = IST.rebuildCheckRep(oldIstTree);
-//                    if (!b) {
-//                        int x = 1;
-//                        System.out.println("WE FAILED HERE");
-//                        assert b;
-//                    }
-//                }
-//            } finally {
-//                lock.unlock();
-//            }
+            lock.lock();
+            try {
+                if (isFirst == 0) {
+                    isFirst = 1;
+                    if (!IST.debugCheckSortedTree(oldIstTree)) {
+                        int x = 1;
+                        assert false;
+                    }
+                    boolean b = IST.rebuildCheckRep(oldIstTree);
+                    if (!b) {
+                        int x = 1;
+                        System.out.println("WE FAILED HERE");
+                        assert b;
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
             createIdealCollaborative(keyCount);
         }
             lock.lock();//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
                 //TODO: mb change to trylock later
             try {
-//                if(isFirst == 1){
-//                    isFirst = 2;
-//                    if (! IST.debugCheckSortedTree(newIstTree)){
-//                        int x = 1;
-//                        TX.print("keyCount = " + keyCount);
-//                        assert false;
-//                    }
-//                    boolean b = IST.rebuildCheckRep(newIstTree);
-//                    if(!b){
-//                        int x = 1;
-//                        System.out.println("WE FAILED HERE");
-//                        assert b;
-//                    }
-//                    assert b;
-//                }
+                if(isFirst == 1){
+                    isFirst = 2;
+                    if (! IST.debugCheckSortedTree(newIstTree)){
+                        int x = 1;
+                        TX.print("keyCount = " + keyCount);
+                        assert false;
+                    }
+                    boolean b = IST.rebuildCheckRep(newIstTree);
+                    if(!b){
+                        int x = 1;
+                        System.out.println("WE FAILED HERE");
+                        assert b;
+                    }
+                    assert b;
+                }
 
                 if (parent.inner.children.get(indexInParent) == oldIstTree) {
                     if(newIstTree.inner == null){
@@ -281,11 +356,11 @@ public class ISTRebuildObject {
             if (i>0) {
                 if (node.single.key < last) {
                     StringBuilder error = new StringBuilder();
-                    for (int j = i-5; j< i+5; j++){
+                    for (int j = Math.max(i-5,0); j< Math.min(i+5,list.size()); j++){
                         error.append(" ").append(list.get(j).single.key);
                     }
                     TX.print(error.toString());
-                    assert  false;
+                    assert false;
                 }
             }
             i++;
