@@ -201,15 +201,14 @@ public class IST {
         rebuildRoot.inner.rebuildObjectAtomicReference.compareAndSet(null, new ISTRebuildObject(rebuildRoot,index,parent));
         rebuildRoot.inner.rebuildObject = rebuildRoot.inner.rebuildObjectAtomicReference.get(); // at this point someone must have changed the reference.
         // TODO: add if needed - result = DCSS(p.children[i], node, op, p.status, [0,⊥,⊥])
-        if (rebuildRoot.inner.rebuildObject.helpRebuild()){
-            // only master returns true
-            //rebuildCheckRep();
-        }
+        rebuildRoot.inner.rebuildObject.helpRebuild();
         TX.print("Finished Rebuild");
     }
 
     ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index, LocalStorage localStorage){
-        assert !localStorage.ISTWriteSet.containsKey(root); // we assume that if we got here, it's with a global part of the tree.
+        if (TX.DEBUG_MODE_IST) {
+            assert !localStorage.ISTWriteSet.containsKey(root); // we assume that if we got here, it's with a global part of the tree.
+        }
         //if(DEBUG_MODE) System.out.println("Thread ID = " + localStorage.tid);
         if(!root.isInner){
             return root; // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
@@ -267,16 +266,11 @@ public class IST {
 //                    while(!root.inner.debugLock.tryLock()){
 //                        TX.print("Waiting for Lock, Node: " + root);
 //                    }
-                    localStorage.decActiveList.add(root);
-                    root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
 //                    root.inner.debugLock.lock(); // debug - maybe remove
 //                    int threadSetSize = root.inner.activeThreadsSet.size();
 //                    int decActiveListSize = localStorage.decActiveList.size();
-//                    localStorage.decActiveList.add(root);
-//                    root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
-//                    if(root.inner.activeThreadsSet.size() - threadSetSize > 1){
-//                        int x = 1;
-//                    }
+                    localStorage.decActiveList.add(root);
+                    root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
 //                    assert root.inner.activeThreadsSet.size() - threadSetSize <= 1;
 //                    assert localStorage.decActiveList.size() - decActiveListSize <= 1;
 //                    root.inner.debugLock.unlock();
@@ -403,9 +397,6 @@ public class IST {
                 } else {
                     newPath.add(new Pair<>(curNode.inner.keys.get(i - 1), "right"));
                 }
-                if (child == null) {
-                    int x = 1;
-                }
                if  (!_checkRep(child, newPath)){
                    return false;
                }
@@ -475,9 +466,6 @@ public class IST {
         int i=0;
         for (ISTNode node : List){
             if (i>0) {
-                if (node.single == null){
-                    int x = 1;
-                }
                 if (node.single.key < last) {
                     StringBuilder error = new StringBuilder();
                     for (int j = i-5; j< i+5; j++){

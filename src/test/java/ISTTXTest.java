@@ -254,7 +254,6 @@ public class ISTTXTest {
 
     @Test
     public void complexMultiThreadTest() throws InterruptedException, FileNotFoundException {
-        while (true) {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
             // remove output_T* files before test.
@@ -264,8 +263,8 @@ public class ISTTXTest {
             Random rand = new Random(1);
             HashSet<Integer> keySet = new HashSet<>();
             List<Integer> valueList = new ArrayList<>();
-            int amountOfKeys = 10000;
-            int amountOfKeys2 = 5000;
+            int amountOfKeys = 400000;
+            int amountOfKeys2 = 200000;
             while (keySet.size() != amountOfKeys + amountOfKeys2) {
                 keySet.add(rand.nextInt());
                 valueList.add(rand.nextInt());
@@ -350,7 +349,7 @@ public class ISTTXTest {
             valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
 
             assert myTree.checkRep();
-            
+
             // REMOVES
             System.out.println("Starting Removes...\n");
             threads = new ArrayList<>(numThreads);
@@ -374,7 +373,7 @@ public class ISTTXTest {
 
             System.out.println("Num Of Aborts = " + TX.abortCount);
 
-        }
+
     }
 
     public class ISTSimpleRun implements Runnable {
