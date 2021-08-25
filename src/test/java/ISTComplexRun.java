@@ -59,7 +59,8 @@ public class ISTComplexRun implements Runnable {
                             } else if (operation.equals("lookup")){
                                 TX.print("lookup: " + name);
                                 if (validOperation) {
-                                    Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
+                                    Object res = tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j));
+                                    assert res == valueList.get(i * NUM_OPS_PER_TX + j) : "LOOKUP ERROR: expected " + valueList.get(i * NUM_OPS_PER_TX + j) + ", but found " + res + ". key = " + keyList.get(i * NUM_OPS_PER_TX + j);
                                 } else {
                                     Assert.assertNull(tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
                                 }
