@@ -45,9 +45,13 @@ public class ISTComplexRun implements Runnable {
                                 tree.insert(keyList.get(i * NUM_OPS_PER_TX + j), valueList.get(i * NUM_OPS_PER_TX + j));
                                 Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
                             } else if (operation.equals("remove")) {
-                                TX.print("remove: " + name);
+                                TX.print("remove: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i * NUM_OPS_PER_TX + j));
                                 if (validOperation) {
-                                    tree.remove(keyList.get(i * NUM_OPS_PER_TX + j));
+                                    boolean res = tree.remove(keyList.get(i * NUM_OPS_PER_TX + j));
+                                    if(!res){
+                                        TX.print("***EXCEPTION***");
+                                        assert false;
+                                    }
                                 } else {
                                     int finalI = i;
                                     Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
@@ -63,17 +67,20 @@ public class ISTComplexRun implements Runnable {
                             } else { // mixed (insert+remove)
                                 TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i * NUM_OPS_PER_TX + j));
                                 tree.insert(keyList.get(i * NUM_OPS_PER_TX + j), valueList.get(i * NUM_OPS_PER_TX + j));
-                                TX.print("remove: " + name);
-                                tree.remove(keyList2.get(i * NUM_OPS_PER_TX + j));
+                                Object res = tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j));
+                                assert res == valueList.get(i * NUM_OPS_PER_TX + j) : "LOOKUP ERROR: expected " + valueList.get(i * NUM_OPS_PER_TX + j) + ", but found " + res + ". key = " + keyList.get(i * NUM_OPS_PER_TX + j);
+                                TX.print("remove: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList2.get(i * NUM_OPS_PER_TX + j));
+                                assert tree.remove(keyList2.get(i * NUM_OPS_PER_TX + j));
                             }
                         }
-                    } catch (TXLibExceptions.AbortException exp) {
-                        TX.print("********__FAILED__********");
-                        //System.exit(1);
+//                    } catch (TXLibExceptions.AbortException exp) {
+//                        TX.print("********__ABORT__********");
                     } finally {
                         TX.TXend();
                         tree.debugCheckRebuild();
                         tree.checkLevels();
+//                        TXLibExceptions excep = new TXLibExceptions();
+//                        throw excep.new AbortException();
                     }
                 } catch (TXLibExceptions.AbortException exp) {
                     TX.print("abort");

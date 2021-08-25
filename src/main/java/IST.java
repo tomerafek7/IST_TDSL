@@ -81,6 +81,8 @@ public class IST {
             } else { // still an inner
                 if(localStorage.ISTReadSet.contains(curNode)){
                     // aborting because someone have committed the node which is in our read set
+                    localStorage.earlyAbort = true;
+                    TX.print("middle abort - IST");
                     TXLibExceptions excep = new TXLibExceptions();
                     throw excep.new AbortException();
                 }

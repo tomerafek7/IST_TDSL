@@ -91,7 +91,7 @@ public class LinkedList {
         while (true) {
             if (pred.isLocked() || pred.getVersion() > localStorage.readVersion) {
                 // abort TX
-                localStorage.TX = false;
+                localStorage.isTX = false;
                 TXLibExceptions excep = new TXLibExceptions();
                 throw excep.new AbortException();
             }
@@ -99,7 +99,7 @@ public class LinkedList {
                 // TODO in the case of a thread running singleton and then TX
                 // this TX will abort once but for no reason
                 TX.incrementAndGetVersion();
-                localStorage.TX = false;
+                localStorage.isTX = false;
                 TXLibExceptions excep = new TXLibExceptions();
                 throw excep.new AbortException();
             }
@@ -132,7 +132,7 @@ public class LinkedList {
         // we first see if locked, then read next and then re-check locked
         if (n.isLocked()) {
             // abort TX
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
@@ -141,13 +141,13 @@ public class LinkedList {
         unsafe.loadFence();
         if (n.isLocked() || n.getVersion() > localStorage.readVersion) {
             // abort TX
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
         if (n.isSameVersionAndSingleton(localStorage.readVersion)) {
             TX.incrementAndGetVersion();
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
@@ -287,7 +287,7 @@ public class LinkedList {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             return putSingleton(key, val);
         }
 
@@ -470,7 +470,7 @@ public class LinkedList {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             return putIfAbsentSingleton(key, val);
         }
 
@@ -638,7 +638,7 @@ public class LinkedList {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             return removeSingleton(key);
         }
 
@@ -750,7 +750,7 @@ public class LinkedList {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             return containsKeySingleton(key);
         }
 
@@ -843,7 +843,7 @@ public class LinkedList {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             return getSingleton(key);
         }
 

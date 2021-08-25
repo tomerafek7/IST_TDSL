@@ -221,7 +221,7 @@ public class Queue {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
 
             if (TX.DEBUG_MODE_QUEUE) {
                 System.out.println("Queue enqueue - singleton");
@@ -257,13 +257,13 @@ public class Queue {
         }
 
         if (localStorage.readVersion < getVersion()) {
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
         if ((localStorage.readVersion == getVersion()) && (isSingleton())) {
             TX.incrementAndGetVersion();
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
@@ -283,7 +283,7 @@ public class Queue {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
 
             if (TX.DEBUG_MODE_QUEUE) {
                 System.out.println("Queue dequeue - singleton");
@@ -318,19 +318,19 @@ public class Queue {
         }
 
         if (localStorage.readVersion < getVersion()) {
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
         if ((localStorage.readVersion == getVersion()) && (isSingleton())) {
             TX.incrementAndGetVersion();
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
 
         if (!tryLock()) { // if queue is locked by another thread
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
 
@@ -377,7 +377,7 @@ public class Queue {
         LocalStorage localStorage = TX.lStorage.get();
 
         // SINGLETON
-        if (!localStorage.TX) {
+        if (!localStorage.isTX) {
             if (TX.DEBUG_MODE_QUEUE) {
                 System.out.println("Queue isEmpty - singleton");
             }
@@ -399,13 +399,13 @@ public class Queue {
         }
 
         if (localStorage.readVersion < getVersion()) {
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
         if ((localStorage.readVersion == getVersion()) && (isSingleton())) {
             TX.incrementAndGetVersion();
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
@@ -416,7 +416,7 @@ public class Queue {
                 System.out.println("Queue isEmpty - couldn't lock");
             }
 
-            localStorage.TX = false;
+            localStorage.isTX = false;
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
 

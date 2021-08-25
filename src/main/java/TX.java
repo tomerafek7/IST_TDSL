@@ -33,7 +33,7 @@ public class TX {
     public static void TXbegin() {
 
         LocalStorage localStorage = lStorage.get();
-        localStorage.TX = true;
+        localStorage.isTX = true;
         localStorage.readVersion = getVersion();
         localStorage.TxNum = TxCounter.incrementAndGet();
 
@@ -49,11 +49,11 @@ public class TX {
             TX.print("TXend");
         }
 
-        boolean abort = false;
-
         LocalStorage localStorage = lStorage.get();
 
-        if (!localStorage.TX) {
+        boolean abort = localStorage.earlyAbort; // abort is automatically = true if there was an early abort.
+
+        if (!localStorage.isTX) {
             if (DEBUG_MODE_TX) {
                 System.out.println("TXend - abort the TX");
             }
@@ -337,8 +337,9 @@ public class TX {
         localStorage.indexAdd.clear();
         localStorage.indexRemove.clear();
 
-        localStorage.TX = false;
+        localStorage.isTX = false;
         localStorage.readOnly = true;
+        localStorage.earlyAbort = false;
 
         if (DEBUG_MODE_TX) {
             if (abort) {

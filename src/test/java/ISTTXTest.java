@@ -259,13 +259,14 @@ public class ISTTXTest {
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 100000;
-        int amountOfKeys2 = 50000;
-        while (keySet.size() != amountOfKeys) {
+        int amountOfKeys = 300000;
+        int amountOfKeys2 = 150000;
+        while (keySet.size() != amountOfKeys + amountOfKeys2) {
             keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());
         }
-        List<Integer> keyList =new ArrayList<>(keySet);
+        List<Integer> totalKeyList = new ArrayList<>(keySet);
+        List<Integer> keyList = totalKeyList.subList(0, amountOfKeys);
 
         // INSERTS
         System.out.println("Starting Inserts...\n");
@@ -311,15 +312,9 @@ public class ISTTXTest {
         myTree.checkLevels();
         System.out.println("Finished Lookups\n");
 
-        while (keySet.size() != amountOfKeys + amountOfKeys2) {
-            keySet.add(rand.nextInt());
-            valueList.add(rand.nextInt());
-        }
-
-        keyList = new ArrayList<>(keySet);
-        List<Integer> keyListAdd = keyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
+        List<Integer> keyListAdd = totalKeyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
         List<Integer> valueListAdd = valueList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
-        List<Integer> keyListRemove = keyList.subList(0, amountOfKeys2);
+        List<Integer> keyListRemove = totalKeyList.subList(0, amountOfKeys2);
         List<Integer> valueListRemove = valueList.subList(0, amountOfKeys2);
 
         // MIXED
@@ -346,16 +341,16 @@ public class ISTTXTest {
         myTree.checkLevels();
         System.out.println("Finished Mixed\n");
 
-        keyListRemove = keyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
-        valueListRemove = valueList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+        keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+        valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
 
         // REMOVES
         System.out.println("Starting Removes...\n");
         threads = new ArrayList<>(numThreads);
         index = 0;
         for (int i = 0; i < numThreads; i++) {
-            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyListRemove.subList(index,index+(amountOfKeys/numThreads)),
-                    valueListRemove.subList(index,index+(amountOfKeys/numThreads)), new ArrayList<>(), new ArrayList<>(),"remove",true)));
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
+                    valueList.subList(index,index+(amountOfKeys/numThreads)), new ArrayList<>(), new ArrayList<>(),"remove",true)));
             index += amountOfKeys/numThreads;
         }
         for (int i = 0; i < numThreads; i++) {

@@ -8,8 +8,9 @@ public class LocalStorage {
     protected long readVersion = 0L;
     protected long writeVersion = 0L; // for debug
     protected long TxNum = 0L; // to maintain order between TXs - IST
-    protected boolean TX = false;
+    protected boolean isTX = false;
     protected boolean readOnly = true;
+    protected boolean earlyAbort = false;
     protected HashMap<Queue, LocalQueue> queueMap = new HashMap<Queue, LocalQueue>();
     protected HashMap<LNode, WriteElement> writeSet = new HashMap<LNode, WriteElement>();
     protected HashSet<LNode> readSet = new HashSet<LNode>();
@@ -81,6 +82,8 @@ public class LocalStorage {
 
     protected void ISTPutIntoReadSet(ISTNode node) {
         if (node.getVersion() > readVersion) { // abort immediately
+            earlyAbort = true;
+            TX.print("middle abort - localStorage");
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
