@@ -12,6 +12,7 @@ public class ISTRebuildObject {
     ISTNode parent;
     boolean finishedRebuild;
     ReentrantLock lock;
+    ReentrantLock debugCountLock;
     AtomicReference<ArrayList<ReentrantLock>> childrenLocksRebuild;
     AtomicReference<ArrayList<ReentrantLock>> childrenLocksCount;
     int isFirst; // debug - remove
@@ -27,6 +28,7 @@ public class ISTRebuildObject {
         newIstTreeReference = new AtomicReference<>(null);
         newIstTree = null;
         lock = new ReentrantLock();
+        debugCountLock = new ReentrantLock();
         childrenLocksRebuild = new AtomicReference<>(null);
         childrenLocksCount = new AtomicReference<>(null);
         isFirst = 0;
@@ -102,6 +104,10 @@ public class ISTRebuildObject {
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTNode> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
+        if(List.size() == 0){
+            int x = 1;
+            createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
+        }
         debugCheckKVPairsList(List);
         //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
         ISTNode child = buildIdealISTree(List);
@@ -173,14 +179,14 @@ public class ISTRebuildObject {
     }
 
     public int serialSubTreeCount(ISTNode curNode){
-        lock.lock();
+        debugCountLock.lock();
         try{
             if(subTreeDebugFirst){
                 subTreeDebugFirst = false;
                 debugSubTreeCount = subTreeCount(curNode);
             }
         } finally {
-            lock.unlock();
+            debugCountLock.unlock();
         }
         return debugSubTreeCount;
     }
@@ -196,7 +202,7 @@ public class ISTRebuildObject {
         childrenLocksCount.compareAndSet(null, locks);
         locks = childrenLocksCount.get();
 
-        if (subTreeRoot.inner.numOfChildren > 0) {
+        if (subTreeRoot.inner.numOfChildren > COLLABORATION_THRESHOLD) {
             while (true) { // work queue
                 int index = subTreeRoot.inner.waitQueueIndexCount.getAndIncrement();
                 if (index >= subTreeRoot.inner.numOfChildren) break;
@@ -237,6 +243,7 @@ public class ISTRebuildObject {
                 keyCount += countChild(child);
             }
         }
+        node.inner.numOfLeaves = keyCount;
         return keyCount;
 
     }
@@ -280,7 +287,7 @@ public class ISTRebuildObject {
         if (finishedRebuild){
             return false; // in this case we need to update the root (outside)
         }
-        int keyCount = serialSubTreeCount(oldIstTree);
+        int keyCount = subTreeCountNew(oldIstTree);
         if(keyCount == 0){ // corner case - rebuild is done with 0 leaves (all are empty) - so the new root is single
             newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true)); // empty single
             newIstTree = newIstTreeReference.get();
