@@ -259,8 +259,8 @@ public class ISTTXTest {
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 300000;
-        int amountOfKeys2 = 150000;
+        int amountOfKeys = 200000;
+        int amountOfKeys2 = 100000;
         while (keySet.size() != amountOfKeys + amountOfKeys2) {
             keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());

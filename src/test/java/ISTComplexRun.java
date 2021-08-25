@@ -37,7 +37,7 @@ public class ISTComplexRun implements Runnable {
             while (true) {
                 try {
                     try {
-                        //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
+                        // System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
                         TX.TXbegin();
                         for (int j = 0; j < NUM_OPS_PER_TX; j++) {
                             if (operation.equals("insert")) {
