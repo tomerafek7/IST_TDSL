@@ -252,7 +252,7 @@ public class ISTTXTest {
     public void complexMultiThreadTest() throws InterruptedException, FileNotFoundException {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
-        // remove output_T* files before test
+        // remove output_T* files before test.
         removeOutputFiles();
         IST myTree = new IST();
         int numThreads = 10;

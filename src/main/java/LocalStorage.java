@@ -89,6 +89,7 @@ public class LocalStorage {
         }
         ISTReadSet.add(node);
     }
+
         // if this node is in the cur TX write-set - read it from there
 //        if(ISTWriteSet.containsKey(node)) {
 //            return ISTWriteSet.get(node);
