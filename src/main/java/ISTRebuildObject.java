@@ -32,7 +32,9 @@ public class ISTRebuildObject {
 
 
     public ISTNode buildIdealISTree(List<ISTNode> KVPairList) {
-        debugCheckKVPairsList(KVPairList);
+        if (TX.DEBUG_MODE_IST) {
+            debugCheckKVPairsList(KVPairList);
+        }
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
             ISTNode myNode = new ISTNode(KVPairList, numOfLeaves);
@@ -40,26 +42,20 @@ public class ISTRebuildObject {
 //            myNode.children.add(KVPairList.get(0));
             return myNode;
         }
-        debugCheckKVPairsList(KVPairList);
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
         int childSize = (int) Math.floor((((double) numOfLeaves) / numChildren));
         int remainder = numOfLeaves % numChildren;
         ISTNode myNode = new ISTNode(numChildren, numOfLeaves);
         for (int i = 0; i < numChildren; i++) {
             int size = childSize + (i < remainder ? 1 : 0);
-            debugCheckKVPairsList(KVPairList.subList(0, size));
-            debugCheckKVPairsList(KVPairList);
             myNode.inner.children.set(i,buildIdealISTree(KVPairList.subList(0, size)));
-            debugCheckKVPairsList(KVPairList);
             if (i != 0) {
                 myNode.inner.keys.set(i-1, KVPairList.get(0).single.key);
                 if (i == 1) myNode.minKey = KVPairList.get(0).single.key;
                 if (i == numChildren - 1) myNode.maxKey = KVPairList.get(0).single.key;
 
             }
-            debugCheckKVPairsList(KVPairList);
             KVPairList = KVPairList.subList(size, KVPairList.size());
-            debugCheckKVPairsList(KVPairList);
         }
         return myNode;
 
@@ -101,7 +97,6 @@ public class ISTRebuildObject {
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTNode> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
-        debugCheckKVPairsList(List);
         //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
         ISTNode child = buildIdealISTree(List);
         if (index != 0){
@@ -135,7 +130,6 @@ public class ISTRebuildObject {
         if (keyCount <= COLLABORATION_THRESHOLD) {
             ArrayList<ISTNode> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
-            debugCheckKVPairsList(list);
             tempNewIstTree = buildIdealISTree(list);
         }
         else {
@@ -214,44 +208,46 @@ public class ISTRebuildObject {
             newIstTreeReference.compareAndSet(null, new ISTNode(null, null, true)); // empty single
             newIstTree = newIstTreeReference.get();
         } else {
-            lock.lock();
-            try {
-                if (isFirst == 0) {
-                    isFirst = 1;
-                    if (!IST.debugCheckSortedTree(oldIstTree)) {
-                        int x = 1;
-                        assert false;
+            if (TX.DEBUG_MODE_IST) {
+                lock.lock();
+                try {
+                    if (isFirst == 0) {
+                        isFirst = 1;
+                        if (!IST.debugCheckSortedTree(oldIstTree)) {
+                            int x = 1;
+                            assert false;
+                        }
+                        boolean b = IST.rebuildCheckRep(oldIstTree);
+                        if (!b) {
+                            int x = 1;
+                            System.out.println("WE FAILED HERE");
+                            assert b;
+                        }
                     }
-                    boolean b = IST.rebuildCheckRep(oldIstTree);
-                    if (!b) {
-                        int x = 1;
-                        System.out.println("WE FAILED HERE");
-                        assert b;
-                    }
+                } finally {
+                    lock.unlock();
                 }
-            } finally {
-                lock.unlock();
             }
             createIdealCollaborative(keyCount);
         }
             lock.lock();//TODO: maor - maybe we can remove this lock because we newIstTree is atomic and won't be changed
                 //TODO: mb change to trylock later
             try {
-                if(isFirst == 1){
-                    isFirst = 2;
-                    if (! IST.debugCheckSortedTree(newIstTree)){
-                        int x = 1;
-                        TX.print("keyCount = " + keyCount);
-                        assert false;
-                    }
-                    boolean b = IST.rebuildCheckRep(newIstTree);
-                    if(!b){
-                        int x = 1;
-                        System.out.println("WE FAILED HERE");
-                        assert b;
-                    }
-                    assert b;
-                }
+//                if(isFirst == 1){
+//                    isFirst = 2;
+//                    if (! IST.debugCheckSortedTree(newIstTree)){
+//                        int x = 1;
+//                        TX.print("keyCount = " + keyCount);
+//                        assert false;
+//                    }
+//                    boolean b = IST.rebuildCheckRep(newIstTree);
+//                    if(!b){
+//                        int x = 1;
+//                        System.out.println("WE FAILED HERE");
+//                        assert b;
+//                    }
+//                    assert b;
+//                }
 
                 if (parent.inner.children.get(indexInParent) == oldIstTree) {
                     if(newIstTree.inner == null){

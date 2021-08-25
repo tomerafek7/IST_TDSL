@@ -51,8 +51,10 @@ public class ISTTXTest {
             System.out.println("abort");
         } finally {
             TX.TXend();
-            myTree.rebuild(myTree.root.inner.children.get(0),myTree.root, 0 );
-            myTree.checkLevels();
+            if (TX.DEBUG_MODE_IST) {
+                myTree.rebuild(myTree.root.inner.children.get(0), myTree.root, 0);
+                myTree.checkLevels();
+            }
         }
     }
 
@@ -227,9 +229,11 @@ public class ISTTXTest {
                 return name.matches( "output_T[0-9]*.txt" );
             }
         } );
-        for ( final File file : files ) {
-            if ( !file.delete() ) {
-                System.err.println( "Can't remove " + file.getAbsolutePath() );
+        if (files != null) {
+            for (final File file : files) {
+                if (!file.delete()) {
+                    System.err.println("Can't remove " + file.getAbsolutePath());
+                }
             }
         }
         final File folder2 = new File("C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats");
@@ -240,13 +244,14 @@ public class ISTTXTest {
                 return name.matches( "stats_T[0-9]*.csv" );
             }
         } );
-        for ( final File file : files2 ) {
-            if ( !file.delete() ) {
-                System.err.println( "Can't remove " + file.getAbsolutePath() );
+        if (files2 != null) {
+            for (final File file : files2) {
+                if (!file.delete()) {
+                    System.err.println("Can't remove " + file.getAbsolutePath());
+                }
             }
         }
     }
-
 
     @Test
     public void complexMultiThreadTest() throws InterruptedException, FileNotFoundException {
@@ -259,9 +264,9 @@ public class ISTTXTest {
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 300000;
-        int amountOfKeys2 = 150000;
-        while (keySet.size() != amountOfKeys + amountOfKeys2) {
+        int amountOfKeys = 1000000;
+        int amountOfKeys2 = 500000;
+        while (keySet.size() != amountOfKeys +amountOfKeys2) {
             keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());
         }
@@ -284,13 +289,17 @@ public class ISTTXTest {
             threads.get(i).join();
         }
         try {
-            myTree.checkLevels();
-            assert myTree.checkRep();
+            if (TX.DEBUG_MODE_IST) {
+                myTree.checkLevels();
+                assert myTree.checkRep();
+            }
         } catch (TXLibExceptions.AbortException e){
             System.out.println("Check Rep Failed. Exiting.");
             //System.exit(1);
         }
-        myTree.debugCheckRebuild();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+        }
         System.out.println("Finished Inserts\n");
 
         // LOOKUPS
@@ -308,8 +317,10 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-        myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+            myTree.checkLevels();
+        }
         System.out.println("Finished Lookups\n");
 
         List<Integer> keyListAdd = totalKeyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
@@ -338,7 +349,9 @@ public class ISTTXTest {
             threads.get(i).join();
         }
         myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.checkLevels();
+        }
         System.out.println("Finished Mixed\n");
 
         keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
@@ -359,8 +372,10 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-        myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+            myTree.checkLevels();
+        };
         System.out.println("Finished Removes\n");
 
         System.out.println("Test is done!\n");

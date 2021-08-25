@@ -77,8 +77,10 @@ public class ISTComplexRun implements Runnable {
 //                        TX.print("********__ABORT__********");
                     } finally {
                         TX.TXend();
-                        tree.debugCheckRebuild();
-                        tree.checkLevels();
+                        if (TX.DEBUG_MODE_IST) {
+                            tree.debugCheckRebuild();
+                            tree.checkLevels();
+                        }
 //                        TXLibExceptions excep = new TXLibExceptions();
 //                        throw excep.new AbortException();
                     }
