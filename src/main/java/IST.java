@@ -62,8 +62,10 @@ public class IST {
         ISTNode parentNode = null;
         while (true){
             //debugCheckNodesThreadsMatching(iter); // debug
-            if(curNode.inner != null && curNode.inner.rebuildObject != null && curNode.inner.activeTX.get() != -1){
-                TX.print("ERROR!!! Path: " + path.toString());
+            if (TX.DEBUG_MODE_IST) {
+                if (curNode.inner != null && curNode.inner.rebuildObject != null && curNode.inner.activeTX.get() != -1) {
+                    TX.print("ERROR!!! Path: " + path.toString());
+                }
             }
             parentNode =  curNode;
             int idx = interpolate( curNode, key);
@@ -86,7 +88,7 @@ public class IST {
                     TXLibExceptions excep = new TXLibExceptions();
                     throw excep.new AbortException();
                 }
-                curNode = checkAndHelpRebuild(curNode, parentNode, idx);
+                curNode = checkAndHelpRebuild(curNode, parentNode, idx,localStorage);
                 //debugCheckNodesThreadsMatching(iter); // debug
                 if(!curNode.isInner) { // corner case of a rebuild with all empty leaves
                     return curNode;
@@ -125,7 +127,7 @@ public class IST {
 
     public void insert(Integer key, Object value){
         LocalStorage localStorage = TX.lStorage.get();
-        if(DEBUG_MODE) TX.print("(TID = " + localStorage.tid + "). INSERT BEGIN");
+        if (TX.DEBUG_MODE_IST){ TX.print("(TID = " + localStorage.tid + "). INSERT BEGIN");}
         ArrayList<Pair<ISTNode, Integer>> path = new ArrayList<>();
 
         // traverse the tree
@@ -191,8 +193,10 @@ public class IST {
     }
 
     void rebuild(ISTNode rebuildRoot,ISTNode parent, int index){
-        LocalStorage localStorage = TX.lStorage.get(); // for debug only
-        TX.print("(TID =" + localStorage.tid + ") rebuild. Node = " + rebuildRoot);
+        if (TX.DEBUG_MODE_IST) {
+            LocalStorage localStorage = TX.lStorage.get(); // for debug only
+            TX.print("(TID =" + localStorage.tid + ") rebuild. Node = " + rebuildRoot);
+        }
         // try to change the atomic reference to rebuild object:
         rebuildRoot.inner.rebuildObjectAtomicReference.compareAndSet(null, new ISTRebuildObject(rebuildRoot,index,parent));
         rebuildRoot.inner.rebuildObject = rebuildRoot.inner.rebuildObjectAtomicReference.get(); // at this point someone must have changed the reference.
@@ -204,8 +208,7 @@ public class IST {
         TX.print("Finished Rebuild");
     }
 
-    ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index){
-        LocalStorage localStorage = TX.lStorage.get();
+    ISTNode checkAndHelpRebuild(ISTNode root, ISTNode parent, int index, LocalStorage localStorage){
         assert !localStorage.ISTWriteSet.containsKey(root); // we assume that if we got here, it's with a global part of the tree.
         //if(DEBUG_MODE) System.out.println("Thread ID = " + localStorage.tid);
         if(!root.isInner){
@@ -213,23 +216,27 @@ public class IST {
         }
         //if(root.inner.activeThreadsSet.contains(localStorage.tid)){ // free pass - in case this TX is already inside this node
         if(localStorage.decActiveList.contains(root)){ // free pass - in case this TX is already inside this node
-            assert (root.inner.activeTX.get() != -10) : "ERROR: (TID = " + localStorage.tid + ") ActiveTX shouldn't be = -1. threadSet = " + root.inner.activeThreadsSet.toString();
+            if (TX.DEBUG_MODE_IST) {
+                assert (root.inner.activeTX.get() != -10) : "ERROR: (TID = " + localStorage.tid + ") ActiveTX shouldn't be = -1. threadSet = " + root.inner.activeThreadsSet.toString();
+            }
             // no one else cannot start rebuild because this thread is inside the node, just to make sure..
             return root;
         }
         if (root.inner.activeTX.get() == -10) { // if (rebuild_flag)
             //root.inner.rebuildObject.helpRebuild();
             rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
-            assert(parent.inner.children.get(index).inner.activeTX.get() != -1) : "ERROR: AFTER REBUILD: (TID = " + localStorage.tid + ") ActiveTX shouldn't be = -1";
+            if (TX.DEBUG_MODE_IST) {
+                assert (parent.inner.children.get(index).inner.activeTX.get() != -1) : "ERROR: AFTER REBUILD: (TID = " + localStorage.tid + ") ActiveTX shouldn't be = -1";
+            }
             //while(parent.inner.children.get(index).inner.activeTX.get() == -10){}
-            return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
+            return checkAndHelpRebuild(parent.inner.children.get(index), parent, index, localStorage); // call again, to make sure we hold the updated sub-tree root
         }
         //System.out.println("needRebuildVersion: " + root.inner.needRebuildVersion + ", TxNum: " + localStorage.TxNum);
         if (root.inner.needRebuildVersion >= 0L && localStorage.TxNum > root.inner.needRebuildVersion) { // enter this only if rebuild is needed AND this TX is younger than when rebuild was needed (to prevent deadlocks)
             TX.print("need rebuild");
             boolean result = false;
             while (root.inner.activeTX.get() != -10) {// we wait for all transactions in sub-tree to be over and than rebuild should catch the sub-tree
-                if(DEBUG_MODE){
+                if (TX.DEBUG_MODE_IST){
                     //HashSet<?> tempSet = new HashSet<>(root.inner.activeThreadsSet);
                     TX.print("(TID = " + localStorage.tid + ") Waiting for ActiveTX to be 0. activeTX = " + root.inner.activeTX.get() + ". Node = " + root + " . ThreadSet = [???]. needRebuildVersion = " + root.inner.needRebuildVersion + ". TxNum = " + localStorage.TxNum);
                 }
@@ -237,10 +244,10 @@ public class IST {
             }
             if (result){
                 rebuild(root, parent, index); // to get the rebuild object (or create it in case it's null), and then call help rebuild
-                return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
+                return checkAndHelpRebuild(parent.inner.children.get(index), parent, index, localStorage); // call again, to make sure we hold the updated sub-tree root
             }
             else {
-                return checkAndHelpRebuild(parent.inner.children.get(index), parent, index); // call again, to make sure we hold the updated sub-tree root
+                return checkAndHelpRebuild(parent.inner.children.get(index), parent, index,localStorage); // call again, to make sure we hold the updated sub-tree root
             }
         }
 
@@ -248,27 +255,31 @@ public class IST {
             int active = root.inner.activeTX.get();
             boolean result = false;
             if(active == -10){ // rebuild started, go help
-                return checkAndHelpRebuild(parent.inner.children.get(index),parent,index);
+                return checkAndHelpRebuild(parent.inner.children.get(index),parent,index,localStorage);
             } else{ // try to inc the active counter
                 result = root.inner.activeTX.compareAndSet(active, active+1);
                 if(result) {
-                    assert !root.inner.activeThreadsSet.contains(localStorage.tid): "ERROR: Thread is already inside the activeThreadsSet";
-                    assert !localStorage.decActiveList.contains(root): "ERROR: node is already inside the decActiveList";
+                    if (TX.DEBUG_MODE_IST) {
+                        assert !root.inner.activeThreadsSet.contains(localStorage.tid) : "ERROR: Thread is already inside the activeThreadsSet";
+                        assert !localStorage.decActiveList.contains(root) : "ERROR: node is already inside the decActiveList";
+                    }
 
 //                    while(!root.inner.debugLock.tryLock()){
 //                        TX.print("Waiting for Lock, Node: " + root);
 //                    }
-                    root.inner.debugLock.lock(); // debug - maybe remove
-                    int threadSetSize = root.inner.activeThreadsSet.size();
-                    int decActiveListSize = localStorage.decActiveList.size();
                     localStorage.decActiveList.add(root);
                     root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
-                    if(root.inner.activeThreadsSet.size() - threadSetSize > 1){
-                        int x = 1;
-                    }
-                    assert root.inner.activeThreadsSet.size() - threadSetSize <= 1;
-                    assert localStorage.decActiveList.size() - decActiveListSize <= 1;
-                    root.inner.debugLock.unlock();
+//                    root.inner.debugLock.lock(); // debug - maybe remove
+//                    int threadSetSize = root.inner.activeThreadsSet.size();
+//                    int decActiveListSize = localStorage.decActiveList.size();
+//                    localStorage.decActiveList.add(root);
+//                    root.inner.activeThreadsSet.add(localStorage.tid); // adding the TID to the set so we could know that this thread has a free pass
+//                    if(root.inner.activeThreadsSet.size() - threadSetSize > 1){
+//                        int x = 1;
+//                    }
+//                    assert root.inner.activeThreadsSet.size() - threadSetSize <= 1;
+//                    assert localStorage.decActiveList.size() - decActiveListSize <= 1;
+//                    root.inner.debugLock.unlock();
                     return root; // return the updated sub-tree root, so the operation will continue with the updated tree // SUCCESS
                 }
             }

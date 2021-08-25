@@ -97,7 +97,9 @@ public class ISTRebuildObject {
         int childKeyCount = childSize + (index < remainder ? 1 : 0);
         ArrayList<ISTNode> List = new ArrayList<>();
         List = createKVPairsList(List, oldIstTree, fromKey, childKeyCount);
-        debugCheckKVPairsList(List);
+        if (TX.DEBUG_MODE_IST) {
+            debugCheckKVPairsList(List);
+        }
         //System.out.println("child index: " + index + ", KVPairsList: " + List.toString());
         ISTNode child = buildIdealISTree(List);
         if (index != 0){
@@ -131,7 +133,9 @@ public class ISTRebuildObject {
         if (keyCount <= COLLABORATION_THRESHOLD) {
             ArrayList<ISTNode> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
-            debugCheckKVPairsList(list);
+            if (TX.DEBUG_MODE_IST) {
+                debugCheckKVPairsList(list);
+            }
             tempNewIstTree = buildIdealISTree(list);
         }
         else {

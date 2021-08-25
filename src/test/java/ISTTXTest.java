@@ -218,31 +218,35 @@ public class ISTTXTest {
 
     }
 
-    void removeOutputFiles(){
+    void removeOutputFiles() {
         final File folder = new File("C:\\Users\\DELL\\IdeaProjects\\IST_TDSL");
         final File[] files = folder.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept( final File dir,
-                                   final String name ) {
-                return name.matches( "output_T[0-9]*.txt" );
+            public boolean accept(final File dir,
+                                  final String name) {
+                return name.matches("output_T[0-9]*.txt");
             }
-        } );
-        for ( final File file : files ) {
-            if ( !file.delete() ) {
-                System.err.println( "Can't remove " + file.getAbsolutePath() );
+        });
+        if (files != null) {
+            for (final File file : files) {
+                if (!file.delete()) {
+                    System.err.println("Can't remove " + file.getAbsolutePath());
+                }
             }
         }
         final File folder2 = new File("C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats");
         final File[] files2 = folder2.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept( final File dir,
-                                   final String name ) {
-                return name.matches( "stats_T[0-9]*.csv" );
+            public boolean accept(final File dir,
+                                  final String name) {
+                return name.matches("stats_T[0-9]*.csv");
             }
-        } );
-        for ( final File file : files2 ) {
-            if ( !file.delete() ) {
-                System.err.println( "Can't remove " + file.getAbsolutePath() );
+        });
+        if (files2 != null) {
+            for (final File file : files2) {
+                if (!file.delete()) {
+                    System.err.println("Can't remove " + file.getAbsolutePath());
+                }
             }
         }
     }
@@ -284,8 +288,10 @@ public class ISTTXTest {
             threads.get(i).join();
         }
         try {
-            myTree.checkLevels();
-            assert myTree.checkRep();
+            if (TX.DEBUG_MODE_IST) {
+                myTree.checkLevels();
+                assert myTree.checkRep();
+            }
         } catch (TXLibExceptions.AbortException e){
             System.out.println("Check Rep Failed. Exiting.");
             //System.exit(1);
@@ -308,8 +314,10 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-        myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+            myTree.checkLevels();
+        }
         System.out.println("Finished Lookups\n");
 
         List<Integer> keyListAdd = totalKeyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
@@ -337,8 +345,10 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-        myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+            myTree.checkLevels();
+        }
         System.out.println("Finished Mixed\n");
 
         keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
@@ -359,8 +369,10 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).join();
         }
-        myTree.debugCheckRebuild();
-        myTree.checkLevels();
+        if (TX.DEBUG_MODE_IST) {
+            myTree.debugCheckRebuild();
+            myTree.checkLevels();
+        }
         System.out.println("Finished Removes\n");
 
         System.out.println("Test is done!\n");
