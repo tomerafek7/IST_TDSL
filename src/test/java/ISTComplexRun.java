@@ -12,16 +12,21 @@ public class ISTComplexRun implements Runnable {
     IST tree;
     List<Integer> keyList;
     List<Integer> valueList;
+    List<Integer> keyList2;
+    List<Integer> valueList2;
     String operation;
     boolean validOperation;
     static double INSERT_PERCENT = 0.5;
     static int NUM_OPS_PER_TX = 20;
 
-    public ISTComplexRun(String name, IST tree, List<Integer> keyList, List<Integer> valueList, String operation, boolean validOperation){
+    public ISTComplexRun(String name, IST tree, List<Integer> keyList, List<Integer> valueList,
+                         List<Integer> keyList2, List<Integer> valueList2, String operation, boolean validOperation){
         this.name = name;
         this.tree = tree;
         this.keyList = keyList;
         this.valueList = valueList;
+        this.keyList2 = keyList2;
+        this.valueList2 = valueList2;
         this.operation = operation;
         this.validOperation = validOperation;
     }
@@ -35,16 +40,11 @@ public class ISTComplexRun implements Runnable {
                         //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output_" + name + ".txt"))));
                         TX.TXbegin();
                         for (int j = 0; j < NUM_OPS_PER_TX; j++) {
-                            String op = operation;
-                            if (operation.equals("mixed")) {
-                                if (j % 10 < 10 * INSERT_PERCENT) op = "insert";
-                                else op = "remove";
-                            }
-                            if (op.equals("insert")) {
+                            if (operation.equals("insert")) {
                                 TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i * NUM_OPS_PER_TX + j));
                                 tree.insert(keyList.get(i * NUM_OPS_PER_TX + j), valueList.get(i * NUM_OPS_PER_TX + j));
                                 Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
-                            } else if (op.equals("remove")) {
+                            } else if (operation.equals("remove")) {
                                 TX.print("remove: " + name);
                                 if (validOperation) {
                                     tree.remove(keyList.get(i * NUM_OPS_PER_TX + j));
@@ -52,7 +52,7 @@ public class ISTComplexRun implements Runnable {
                                     int finalI = i;
                                     Assert.assertThrows(AssertionError.class, () -> tree.remove(keyList.get(finalI)));
                                 }
-                            } else { // lookup
+                            } else if (operation.equals("lookup")){
                                 TX.print("lookup: " + name);
                                 if (validOperation) {
                                     Assert.assertEquals(valueList.get(i * NUM_OPS_PER_TX + j), tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
@@ -60,6 +60,11 @@ public class ISTComplexRun implements Runnable {
                                     Assert.assertNull(tree.lookup(keyList.get(i * NUM_OPS_PER_TX + j)));
                                 }
 
+                            } else { // mixed (insert+remove)
+                                TX.print("insert: " + name + ", TXnum: " + TX.lStorage.get().TxNum + ", key: " + keyList.get(i * NUM_OPS_PER_TX + j));
+                                tree.insert(keyList.get(i * NUM_OPS_PER_TX + j), valueList.get(i * NUM_OPS_PER_TX + j));
+                                TX.print("remove: " + name);
+                                tree.remove(keyList2.get(i * NUM_OPS_PER_TX + j));
                             }
                         }
                     } catch (TXLibExceptions.AbortException exp) {

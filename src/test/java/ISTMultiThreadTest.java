@@ -60,8 +60,8 @@ public class ISTMultiThreadTest
 
             // Adding threads one by one
             System.out.println("Adding ISTComplexRun : " + threadCounter);
-            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
-                    index+10),valueList,"insert", true));
+//            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
+//                    index+10),valueList,"insert", true));
             index +=10;
             if (index == amountOfKeys) break;
 
@@ -74,8 +74,8 @@ public class ISTMultiThreadTest
 
             // Adding threads one by one
             System.out.println("Adding ISTComplexRun : " + threadCounter);
-            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
-                    index+10),valueList,"remove", true));
+//            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
+//                    index+10),valueList,"remove", true));
             index +=10;
             if (index == amountOfKeys/2) break;
 
@@ -88,8 +88,8 @@ public class ISTMultiThreadTest
 
             // Adding threads one by one
             System.out.println("Adding ISTComplexRun : " + threadCounter);
-            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
-                    index+10),valueList,"lookup", index<500));
+//            executor.execute(new ISTComplexRun("Task #" + threadCounter,myTree,keyList.subList(index,
+//                    index+10),valueList,"lookup", index<500));
             index +=10;
             if (index == amountOfKeys) break;
 

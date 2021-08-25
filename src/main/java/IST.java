@@ -163,7 +163,7 @@ public class IST {
 
     }
 
-    public void remove(Integer key){
+    public boolean remove(Integer key){
         LocalStorage localStorage = TX.lStorage.get();
 
         ArrayList<Pair<ISTNode, Integer>> path = new ArrayList<>();
@@ -176,18 +176,16 @@ public class IST {
                 //leaf.isEmpty = true;
                 localStorage.ISTPutIntoWriteSet(leaf, false, null,null,null,true);
             } else { // different key --> ERROR
-                // TODO: throw exception?
-                assert(false);
+                return false;
             }
         } else { // empty leaf --> ERROR
-            // TODO: throw exception?
-            assert(false);
+            return false;
         }
-
         // increment updates counters
         for (Pair<ISTNode, Integer> pair: path) {
             localStorage.incUpdateList.add(pair.fst);
         }
+        return true;
     }
 
     void rebuild(ISTNode rebuildRoot,ISTNode parent, int index){

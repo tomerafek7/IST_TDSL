@@ -259,7 +259,8 @@ public class ISTTXTest {
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 300000;
+        int amountOfKeys = 100000;
+        int amountOfKeys2 = 50000;
         while (keySet.size() != amountOfKeys) {
             keySet.add(rand.nextInt());
             valueList.add(rand.nextInt());
@@ -272,7 +273,7 @@ public class ISTTXTest {
         int index = 0;
         for (int i = 0; i < numThreads; i++) {
             threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
-                    valueList.subList(index,index+(amountOfKeys/numThreads)),"insert",true)));
+                    valueList.subList(index,index+(amountOfKeys/numThreads)), new ArrayList<>(), new ArrayList<>(), "insert",true)));
             index += amountOfKeys/numThreads;
         }
         for (int i = 0; i < numThreads; i++) {
@@ -297,7 +298,7 @@ public class ISTTXTest {
         index = 0;
         for (int i = 0; i < numThreads; i++) {
             threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
-                    valueList.subList(index,index+(amountOfKeys/numThreads)),"lookup",true)));
+                    valueList.subList(index,index+(amountOfKeys/numThreads)), new ArrayList<>(), new ArrayList<>(),"lookup",true)));
             index += amountOfKeys/numThreads;
         }
         for (int i = 0; i < numThreads; i++) {
@@ -310,13 +311,51 @@ public class ISTTXTest {
         myTree.checkLevels();
         System.out.println("Finished Lookups\n");
 
+        while (keySet.size() != amountOfKeys + amountOfKeys2) {
+            keySet.add(rand.nextInt());
+            valueList.add(rand.nextInt());
+        }
+
+        keyList = new ArrayList<>(keySet);
+        List<Integer> keyListAdd = keyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
+        List<Integer> valueListAdd = valueList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
+        List<Integer> keyListRemove = keyList.subList(0, amountOfKeys2);
+        List<Integer> valueListRemove = valueList.subList(0, amountOfKeys2);
+
+        // MIXED
+        System.out.println("Starting Mixed...\n");
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        int mixedAmountOfKeys = amountOfKeys - amountOfKeys2;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree,
+                    keyListAdd.subList(index,index+(mixedAmountOfKeys/numThreads)),
+                    valueListAdd.subList(index,index+(mixedAmountOfKeys/numThreads)),
+                    keyListRemove.subList(index,index+(mixedAmountOfKeys/numThreads)),
+                    valueListRemove.subList(index,index+(mixedAmountOfKeys/numThreads)),
+                    "mixed",true)));
+            index += mixedAmountOfKeys/numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        myTree.debugCheckRebuild();
+        myTree.checkLevels();
+        System.out.println("Finished Mixed\n");
+
+        keyListRemove = keyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+        valueListRemove = valueList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+
         // REMOVES
         System.out.println("Starting Removes...\n");
         threads = new ArrayList<>(numThreads);
         index = 0;
         for (int i = 0; i < numThreads; i++) {
-            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index,index+(amountOfKeys/numThreads)),
-                    valueList.subList(index,index+(amountOfKeys/numThreads)),"remove",true)));
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyListRemove.subList(index,index+(amountOfKeys/numThreads)),
+                    valueListRemove.subList(index,index+(amountOfKeys/numThreads)), new ArrayList<>(), new ArrayList<>(),"remove",true)));
             index += amountOfKeys/numThreads;
         }
         for (int i = 0; i < numThreads; i++) {
