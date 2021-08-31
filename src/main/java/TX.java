@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.BiMap;
 
 public class TX {
 
@@ -105,7 +106,8 @@ public class TX {
 
         // locking IST write set
 
-        HashMap<ISTNode, ISTNode> ISTWriteSet = localStorage.ISTWriteSet;
+//        HashMap<ISTNode, ISTNode> ISTWriteSet = localStorage.ISTWriteSet;
+        BiMap<ISTNode, ISTNode> ISTWriteSet = localStorage.ISTWriteSet;
 
         HashSet<ISTNode> lockedISTNodes = new HashSet<>();
 

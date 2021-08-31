@@ -379,7 +379,7 @@ public class ISTTXTest {
 
     @Test
     public void complexMultiThreadTestDoubleInsert() throws InterruptedException, FileNotFoundException {
-//        Thread.sleep(10*1000); // to enable profiling
+        // Thread.sleep(10*1000); // to enable profiling
 
 //         while (true) {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
@@ -392,8 +392,8 @@ public class ISTTXTest {
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> initialValueList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 200000;
-        int amountOfKeys2 = 100000;
+        int amountOfKeys = 1000000;
+        int amountOfKeys2 = 500000;
         while (keySet.size() != amountOfKeys + amountOfKeys2) {
             keySet.add(rand.nextInt());
             initialValueList.add(rand.nextInt());
@@ -433,51 +433,51 @@ public class ISTTXTest {
 
 
 //        // 2ND INSERTS
-//        System.out.println("Starting 2nd Inserts...\n");
-//        threads = new ArrayList<>(numThreads);
-//        index = 0;
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index, index + (amountOfKeys / numThreads)),
-//                    valueList.subList(index, index + (amountOfKeys / numThreads)), new ArrayList<>(), new ArrayList<>(), "insert", true)));
-//            index += amountOfKeys / numThreads;
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).start();
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
-//        try {
-//            myTree.checkLevels();
-//            assert myTree.checkRep();
-//        } catch (TXLibExceptions.AbortException e) {
-//            System.out.println("Check Rep Failed. Exiting.");
-//            //System.exit(1);
-//        }
-//        myTree.debugCheckRebuild();
-//        System.out.println("Finished 2nd Inserts\n");
-//        System.out.println("GVC = " + TX.GVC.get());
-//
+        System.out.println("Starting 2nd Inserts...\n");
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index, index + (amountOfKeys / numThreads)),
+                    valueList.subList(index, index + (amountOfKeys / numThreads)), new ArrayList<>(), new ArrayList<>(), "insert", true)));
+            index += amountOfKeys / numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        try {
+            myTree.checkLevels();
+            assert myTree.checkRep();
+        } catch (TXLibExceptions.AbortException e) {
+            System.out.println("Check Rep Failed. Exiting.");
+            //System.exit(1);
+        }
+        myTree.debugCheckRebuild();
+        System.out.println("Finished 2nd Inserts\n");
+        System.out.println("GVC = " + TX.GVC.get());
+
 //        // LOOKUPS
-//        System.out.println("Starting Lookups...\n");
-//        threads = new ArrayList<>(numThreads);
-//        index = 0;
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index, index + (amountOfKeys / numThreads)),
-//                    valueList.subList(index, index + (amountOfKeys / numThreads)), new ArrayList<>(), new ArrayList<>(), "lookup", true)));
-//            index += amountOfKeys / numThreads;
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).start();
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
-//        myTree.debugCheckRebuild();
-//        myTree.checkLevels();
-//        System.out.println("Finished Lookups\n");
-//        System.out.println("GVC = " + TX.GVC.get());
-//
+        System.out.println("Starting Lookups...\n");
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index, index + (amountOfKeys / numThreads)),
+                    valueList.subList(index, index + (amountOfKeys / numThreads)), new ArrayList<>(), new ArrayList<>(), "lookup", true)));
+            index += amountOfKeys / numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        myTree.debugCheckRebuild();
+        myTree.checkLevels();
+        System.out.println("Finished Lookups\n");
+        System.out.println("GVC = " + TX.GVC.get());
+
         List<Integer> keyListAdd = totalKeyList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
         List<Integer> valueListAdd = valueList.subList(amountOfKeys, amountOfKeys + amountOfKeys2);
         List<Integer> keyListRemove = totalKeyList.subList(0, amountOfKeys2);
@@ -488,33 +488,33 @@ public class ISTTXTest {
         threads = new ArrayList<>(numThreads);
         index = 0;
         int mixedAmountOfKeys = amountOfKeys - amountOfKeys2;
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.add(new Thread(new ISTComplexRun("T" + i, myTree,
-//                    keyListAdd.subList(index, index + (mixedAmountOfKeys / numThreads)),
-//                    valueListAdd.subList(index, index + (mixedAmountOfKeys / numThreads)),
-//                    keyListRemove.subList(index, index + (mixedAmountOfKeys / numThreads)),
-//                    valueListRemove.subList(index, index + (mixedAmountOfKeys / numThreads)),
-//                    "mixed", true)));
-//            index += mixedAmountOfKeys / numThreads;
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-////            Thread.sleep(5*1000);
-//            threads.get(i).start();
-//        }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree,
+                    keyListAdd.subList(index, index + (mixedAmountOfKeys / numThreads)),
+                    valueListAdd.subList(index, index + (mixedAmountOfKeys / numThreads)),
+                    keyListRemove.subList(index, index + (mixedAmountOfKeys / numThreads)),
+                    valueListRemove.subList(index, index + (mixedAmountOfKeys / numThreads)),
+                    "mixed", true)));
+            index += mixedAmountOfKeys / numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+//            Thread.sleep(5*1000);
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
         myTree.debugCheckRebuild();
         myTree.checkLevels();
         System.out.println("Finished Mixed\n");
         System.out.println("GVC = " + TX.GVC.get());
 
-//        keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
-//        valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+        keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+        valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
 
         assert myTree.checkRep();
 
-// REMOVES
+        // REMOVES
         System.out.println("Starting Removes...\n");
         threads = new ArrayList<>(numThreads);
         index = 0;

@@ -49,7 +49,7 @@ public class ISTComplexRun implements Runnable {
                                 if (validOperation) {
                                     boolean res = tree.remove(keyList.get(i * NUM_OPS_PER_TX + j));
                                     if(!res){
-                                        TX.print("***EXCEPTION***");
+                                        System.out.println("***EXCEPTION*** " + i + " " + j);
                                         assert false;
                                     }
                                 } else {

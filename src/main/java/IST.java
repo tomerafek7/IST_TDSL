@@ -71,41 +71,18 @@ public class IST {
             int idx = interpolate( curNode, key);
             path.add(new Pair<>(curNode, idx));
             curNode = parentNode.inner.children.get(idx);
-//            if ( curNode == null || curNode.isLocked()){//TODO: why do we have null here? mystery!
-//                localStorage.earlyAbort = true;
-//                TX.print("middle abort - IST");
-//                TXLibExceptions excep = new TXLibExceptions();
-//                throw excep.new AbortException();
-//            }
-            if (curNode == null){
-                int x = 1;
+            if ( curNode == null || curNode.isLocked()){ //TODO: why do we have null here? mystery!
+                localStorage.earlyAbort = true;
+                TX.print("middle abort - IST");
+                TXLibExceptions excep = new TXLibExceptions();
+                throw excep.new AbortException();
             }
             if(!curNode.isInner){ // reached a single
-                if ( curNode == null || curNode.isLocked()){//TODO: why do we have null here? mystery!
-                    localStorage.earlyAbort = true;
-                    TX.print("middle abort - IST");
-                    TXLibExceptions excep = new TXLibExceptions();
-                    throw excep.new AbortException();
-                }
-//                if (!curNode.tryLock()){
-//                    //aborted because someone is changing the node
-//                    localStorage.earlyAbort = true;
-//                    TX.print("middle abort - IST");
-//                    TXLibExceptions excep = new TXLibExceptions();
-//                    throw excep.new AbortException();
-//                }
-//                if (curNode.isInner){ // the node was changed before we the lock , we can keep traversing.
-//                    assert curNode.getVersion() >localStorage.readVersion;
-//                    curNode.unlock();
-//                    continue;
-//                }
                 localStorage.ISTPutIntoReadSet(curNode);
-                ISTNode localNode = traverseLocalTree(curNode,key,localStorage);
+                ISTNode localNode = traverseLocalTree(curNode, key, localStorage);
                 if (localNode == curNode){
-//                    curNode.unlock();
                     return curNode;
                 } else { //TODO: here we dont need to use write set (we are local), can optimize
-//                    curNode.unlock();
                     return localNode;
                 }
                 //return traverseLocalTree(curNode, key, localStorage);
@@ -128,25 +105,24 @@ public class IST {
 
     // traverse a *local* part of the tree (local means only this thread can see it)
     private ISTNode traverseLocalTree(ISTNode curNode, Integer key, LocalStorage localStorage) {
-        assert !curNode.isInner; // must be single
+        // assert !curNode.isInner; // must be single
         ISTNode fakeNode = localStorage.ISTGetUpdatedNodeFromWriteSet(curNode);
-        if (curNode != fakeNode){//debug purposes
-            curNode.wasLocal = true;
+        if (curNode == fakeNode){//debug purposes
+            return curNode;
         }
         if (fakeNode.isInner){ // inner
             int idx = interpolate(fakeNode, key);
             ISTNode newNode = fakeNode.inner.children.get(idx);
-            assert !newNode.isInner; // could be inner only from write-set
+            // assert !newNode.isInner; // could be inner only from write-set
             return traverseLocalTree(newNode, key, localStorage);
         } else { // single
-            return curNode; // lookup/insert/remove will handle the changes from write-set
+            return traverseLocalTree(fakeNode, key, localStorage); // lookup/insert/remove will handle the changes from write-set
         }
     }
 
-        public Object lookup(Integer key){
+    public Object lookup(Integer key){
         LocalStorage localStorage = TX.lStorage.get();
         ArrayList<Pair<ISTNode, Integer>> path = new ArrayList<>();
-
         // traverse the tree
         ISTNode leaf = traverseTree(key, path, localStorage); // returns a single, not sure if an updated one.
         ISTSingleNode single = localStorage.ISTGetUpdatedNodeFromWriteSet(leaf).single; // brings us the updated one (maybe the same)
@@ -377,13 +353,15 @@ public class IST {
         for (int i = 1; i<100; i++){
             if (numSingles.get(i) == 0 && numInners.get(i) == 0){continue;}
             countSingles += numSingles.get(i);
-            TX.print( "level :" + i + "  singles:" + numSingles.get(i) + "  inners : " + numInners.get(i));
+            System.out.println( "level :" + i + "  singles:" + numSingles.get(i) + "  inners : " + numInners.get(i));
         }
-        TX.print("Num Of Singles = " + countSingles);
+        System.out.println("Num Of Singles = " + countSingles);
     }
     public void  _checkLevels(ISTNode curNode,Integer level ,ArrayList<Integer> numSingles,ArrayList<Integer> numInners) {
         if (!curNode.isInner) {
-            numSingles.set(level, numSingles.get(level)+1);
+            if(!curNode.single.isEmpty) {
+                numSingles.set(level, numSingles.get(level) + 1);
+            }
         } else {
             numInners.set(level, numInners.get(level) + 1);
             for (int i = curNode.inner.numOfChildren - 1; i >= 0; i--) {

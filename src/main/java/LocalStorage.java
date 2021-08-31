@@ -1,4 +1,6 @@
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,8 +21,9 @@ public class LocalStorage {
     protected HashMap<LinkedList, ArrayList<LNode>> indexAdd = new HashMap<LinkedList, ArrayList<LNode>>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexRemove = new HashMap<LinkedList, ArrayList<LNode>>();
     // IST:
-    protected HashMap<ISTNode, ISTNode> ISTWriteSet = new HashMap<>();
-    //protected HashMap<ISTNode, ISTNode> ISTInverseWriteSet = new HashMap<>();  // maintaining a map of newNode -> oldNode
+//    protected HashMap<ISTNode, ISTNode> ISTWriteSet = new HashMap<>();
+    protected BiMap<ISTNode, ISTNode> ISTWriteSet = HashBiMap.create();
+    protected HashMap<ISTNode, ISTNode> ISTInverseWriteSet = new HashMap<>();  // maintaining a map of newNode -> oldNode
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
     protected HashSet<ISTNode> decActiveList = new HashSet<>();
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
@@ -49,16 +52,36 @@ public class LocalStorage {
 //        ISTWriteElement we = new ISTWriteElement();
         //ISTPutIntoReadSet(node); // debug - remove!
       //  assert !node.isInner; TODO: not locked and maybe changed by other thread
+
         ISTNode fakeNode; // it is fake because we just use its single/inner, not the entire node (just need the struct for convenience)
         if (isToInner) { // single --> inner
             fakeNode = new ISTNode(childrenList, childrenList.size());
         } else { // single --> single
             fakeNode = new ISTNode(key, val, isEmpty);
         }
-        ISTNode prev = ISTWriteSet.put(node, fakeNode); // insert into Hash Map and get result.
+        // TODO: review solution
+        ISTNode origin = ISTWriteSet.inverse().get(node);
+        ISTNode prev;
+        if(origin != null){ // this node is a value in WriteSet HashMap - we want to replace it, while keeping the same key.
+            prev = ISTWriteSet.put(origin, fakeNode); // insert into Hash Map and get result.
+        } else { // normal case
+            prev = ISTWriteSet.put(node, fakeNode); // insert into Hash Map and get result.
+        }
         assert prev == null || !prev.isInner; // this key could be inside before only if it was a single.
         readOnly = false;
+
+//            ISTNode fakeNode; // it is fake because we just use its single/inner, not the entire node (just need the struct for convenience)
+//            if (isToInner) { // single --> inner
+//                fakeNode = new ISTNode(childrenList, childrenList.size());
+//            } else { // single --> single
+//                fakeNode = new ISTNode(key, val, isEmpty);
+//            }
+//            ISTNode prev = ISTWriteSet.put(node, fakeNode); // insert into Hash Map and get result.
+//            assert prev == null || !prev.isInner; // this key could be inside before only if it was a single.
+//            readOnly = false;
+
     }
+
 //        if(ISTInverseWriteSet.containsKey(node)){ // the old node replaced someone in the past
 //            ISTNode tempNode = ISTInverseWriteSet.get(node);
 //            assert !tempNode.isInner; // make sure that the replaced node is single - this is the only case in which we should get inside this block
