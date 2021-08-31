@@ -51,7 +51,8 @@ public class LocalStorage {
         } else { // single --> single
             fakeNode = new ISTNode(key, val, isEmpty);
         }
-        ISTWriteSet.put(node, fakeNode);
+        ISTNode prev = ISTWriteSet.put(node, fakeNode); // insert into Hash Map and get result.
+        assert prev == null || !prev.isInner; // this key could be inside before only if it was a single.
         readOnly = false;
     }
 //        if(ISTInverseWriteSet.containsKey(node)){ // the old node replaced someone in the past

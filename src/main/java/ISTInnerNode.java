@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,7 +20,7 @@ public class ISTInnerNode {
     boolean finishedCount; // used only in rebuild
     ISTRebuildObject rebuildObject;
     AtomicReference<ISTRebuildObject> rebuildObjectAtomicReference;
-    HashSet<Long> activeThreadsSet;
+    Set<Long> activeThreadsSet;
     //boolean rebuildFlag; rebuildFlag == (activeTX = -1)
     int debugNumOfLeaves; // used only in debug
     ReentrantLock debugLock;
@@ -39,7 +41,7 @@ public class ISTInnerNode {
         debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
         rebuildObjectAtomicReference = new AtomicReference<>(null);
-        activeThreadsSet = new HashSet<>();
+        activeThreadsSet = ConcurrentHashMap.newKeySet();
 //        children = childrenList; TODO: maybe this is valid and better
 
         debugLock = new ReentrantLock(); // debug
@@ -64,7 +66,7 @@ public class ISTInnerNode {
 //        rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>();
-        activeThreadsSet = new HashSet<>();
+        activeThreadsSet = ConcurrentHashMap.newKeySet();
         rebuildObjectAtomicReference = new AtomicReference<>(null);
         children = new ArrayList<ISTNode> (numOfChildrenReceived);
         debugLock = new ReentrantLock(); // debug

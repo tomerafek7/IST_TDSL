@@ -241,7 +241,6 @@ public class TX {
 //                ISTWriteElement we = entry.getValue();
                 ISTNode fakeNode = entry.getValue();
                 ISTNode node = entry.getKey();
-                node.setVersion(writeVersion);
                 if(fakeNode.isInner) { // single --> inner
                     if (node.isInner){
                         int x = 1;
@@ -257,13 +256,7 @@ public class TX {
                     assert !node.isInner;
                     assert node.inner == null;
                 }
-//                    node.changeToInner(newNode.inner);
-//                } else { // single --> single
-//                    node.single.key = newNode.single.key;
-//                    node.single.value = newNode.single.value;
-//                    node.single.isEmpty = newNode.single.isEmpty;
-//                    node.setVersion(writeVersion);
-//                }
+                node.setVersion(writeVersion); // should be AFTER node change
             }
         }
 
@@ -315,6 +308,7 @@ public class TX {
             }
             if(!node.inner.activeThreadsSet.remove(localStorage.tid)){ // cleaning this TX from all relevant nodes)
                  TX.print("Cannot find TID = " + localStorage.tid + " in " + node.inner.activeThreadsSet.toString());
+                 assert false;
             }
         }
         if(!abort) {
@@ -362,30 +356,24 @@ public class TX {
     }
 
     public static void print(String str){
-        try
-        {
-            String filename= "output_T" + lStorage.get().tid + ".txt";
-            FileWriter fw = new FileWriter(filename,true); //the true will append the new data
-            fw.write(str + "\n"); //appends the string to the file
-            fw.close();
-        }
-        catch(IOException ioe)
-        {
-            System.err.println("IOException: " + ioe.getMessage());
-        }
+//        try {
+//            String filename = "output_T" + lStorage.get().tid + ".txt";
+//            FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+//            fw.write(str + "\n"); //appends the string to the file
+//            fw.close();
+//        } catch (IOException ioe) {
+//            System.err.println("IOException: " + ioe.getMessage());
+//        }
     }
 
     public static void write_stats(String str){
-//        try
-//        {
+//        try {
 //            String dir = "C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats";
-//            String filename= "stats_T" + lStorage.get().tid + ".csv";
-//            FileWriter fw = new FileWriter(dir + "/" + filename,true); //the true will append the new data
+//            String filename = "stats_T" + lStorage.get().tid + ".csv";
+//            FileWriter fw = new FileWriter(dir + "/" + filename, true); //the true will append the new data
 //            fw.write(str + "\n"); //appends the string to the file
 //            fw.close();
-//        }
-//        catch(IOException ioe)
-//        {
+//        } catch (IOException ioe) {
 //            System.err.println("IOException: " + ioe.getMessage());
 //        }
     }

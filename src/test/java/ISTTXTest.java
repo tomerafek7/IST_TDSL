@@ -379,6 +379,8 @@ public class ISTTXTest {
 
     @Test
     public void complexMultiThreadTestDoubleInsert() throws InterruptedException, FileNotFoundException {
+//        Thread.sleep(10*1000); // to enable profiling
+
 //         while (true) {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
@@ -415,17 +417,17 @@ public class ISTTXTest {
         for (int i = 0; i < numThreads; i++) {
             threads.get(i).start();
         }
-//        for (int i = 0; i < numThreads; i++) {
-//            threads.get(i).join();
-//        }
-//        try {
-//            myTree.checkLevels();
-//            assert myTree.checkRep();
-//        } catch (TXLibExceptions.AbortException e) {
-//            System.out.println("Check Rep Failed. Exiting.");
-//            //System.exit(1);
-//        }
-//        myTree.debugCheckRebuild();
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        try {
+            myTree.checkLevels();
+            assert myTree.checkRep();
+        } catch (TXLibExceptions.AbortException e) {
+            System.out.println("Check Rep Failed. Exiting.");
+            //System.exit(1);
+        }
+        myTree.debugCheckRebuild();
         System.out.println("Finished Inserts\n");
         System.out.println("GVC = " + TX.GVC.get());
 
@@ -496,6 +498,7 @@ public class ISTTXTest {
             index += mixedAmountOfKeys / numThreads;
         }
         for (int i = 0; i < numThreads; i++) {
+//            Thread.sleep(5*1000);
             threads.get(i).start();
         }
         for (int i = 0; i < numThreads; i++) {

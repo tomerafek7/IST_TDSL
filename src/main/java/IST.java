@@ -81,7 +81,7 @@ public class IST {
 //                    localStorage.ISTPutIntoReadSet(curNode);
 //                    return curNode;
             } else { // still an inner
-                if(localStorage.ISTReadSet.contains(curNode)){
+                if(localStorage.ISTReadSet.contains(curNode)){ // TODO: check performance - the "contains" could be worse than the early-abort gain.
                     // aborting because someone have committed the node which is in our read set
                     localStorage.earlyAbort = true;
                     TX.print("middle abort - IST");
@@ -132,7 +132,8 @@ public class IST {
 
         // traverse the tree
         ISTNode leaf = traverseTree(key, path, localStorage); // returns a single, not sure if an updated one.
-        ISTSingleNode single = localStorage.ISTGetUpdatedNodeFromWriteSet(leaf).single; // brings us the updated one (maybe the same)
+        // ISTSingleNode single = localStorage.ISTGetUpdatedNodeFromWriteSet(leaf).single; // brings us the updated one (maybe the same)
+        ISTSingleNode single = leaf.single;
         // get parent + idx from the last element in path (path is updated in traverseTree)
         ISTNode parentNode = path.get(path.size()-1).fst;
         Integer idx = path.get(path.size()-1).snd;
