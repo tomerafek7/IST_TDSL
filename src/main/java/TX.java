@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import com.google.common.base.Stopwatch;
 
 public class TX {
 
@@ -33,14 +35,15 @@ public class TX {
 
     public static void TXbegin() {
 
+
         LocalStorage localStorage = lStorage.get();
         localStorage.isTX = true;
         localStorage.readVersion = getVersion();
         localStorage.TxNum = TxCounter.incrementAndGet();
-
+        localStorage.stopwatchTx = Stopwatch.createStarted();
+        localStorage.stopwatchWaiting = Stopwatch.createUnstarted();
         if (DEBUG_MODE_TX) {
             TX.print("TXbegin");
-            //System.out.println("(TID = " + localStorage.tid + ") TXbegin");
         }
     }
 
@@ -241,6 +244,7 @@ public class TX {
 //                ISTWriteElement we = entry.getValue();
                 ISTNode fakeNode = entry.getValue();
                 ISTNode node = entry.getKey();
+
                 if(fakeNode.isInner) { // single --> inner
                     if (node.isInner){
                         int x = 1;
@@ -256,7 +260,7 @@ public class TX {
                     assert !node.isInner;
                     assert node.inner == null;
                 }
-                node.setVersion(writeVersion); // should be AFTER node change
+                node.setVersion(writeVersion);
             }
         }
 
@@ -349,19 +353,26 @@ public class TX {
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }
-
+        localStorage.stopwatchTx.stop(); // optional
+        long millis = localStorage.stopwatchTx.elapsed(TimeUnit.MILLISECONDS);
+        long millisWait = localStorage.stopwatchWaiting.elapsed(TimeUnit.MILLISECONDS);
+        TX.print("TX TIME:" + millis + " ms");
+        TX.print("TX WAIT TIME:" + millisWait + " ms" );
         TX.print("COMMITTED SUCCESSFULLY, TX = " + localStorage.TxNum);
         return true;
 
     }
 
     public static void print(String str){
-//        try {
-//            String filename = "output_T" + lStorage.get().tid + ".txt";
-//            FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+//        try
+//        {
+//            String filename= "output_T" + lStorage.get().tid + ".txt";
+//            FileWriter fw = new FileWriter(filename,true); //the true will append the new data
 //            fw.write(str + "\n"); //appends the string to the file
 //            fw.close();
-//        } catch (IOException ioe) {
+//        }
+//        catch(IOException ioe)
+//        {
 //            System.err.println("IOException: " + ioe.getMessage());
 //        }
     }

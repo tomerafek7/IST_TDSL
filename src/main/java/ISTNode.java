@@ -2,6 +2,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ISTNode {
+    boolean wasLocal;
     Integer minKey; // minKey in the keys of the node ONLY
     Integer maxKey; // maxKey in the keys of the node ONLY
     ISTInnerNode inner;
@@ -22,6 +23,7 @@ public class ISTNode {
         isInner = true;
         minKey = inner.keys.get(0);
         maxKey = inner.keys.get(inner.keys.size()-1);
+        wasLocal = false;
     }
 
     public ISTNode(int numOfChildrenReceived, int leaves){

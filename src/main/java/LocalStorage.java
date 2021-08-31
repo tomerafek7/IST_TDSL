@@ -1,3 +1,5 @@
+import com.google.common.base.Stopwatch;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +26,8 @@ public class LocalStorage {
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
     protected int debugClear = 1;
     protected long tid = Thread.currentThread().getId();
+    protected Stopwatch stopwatchTx;
+    protected Stopwatch stopwatchWaiting;
 
 
     // with ArrayList all nodes will be added to the list
@@ -44,7 +48,7 @@ public class LocalStorage {
     protected void ISTPutIntoWriteSet(ISTNode node, boolean isToInner, List<ISTNode> childrenList, Integer key, Object val, boolean isEmpty) {
 //        ISTWriteElement we = new ISTWriteElement();
         //ISTPutIntoReadSet(node); // debug - remove!
-        assert !node.isInner;
+      //  assert !node.isInner; TODO: not locked and maybe changed by other thread
         ISTNode fakeNode; // it is fake because we just use its single/inner, not the entire node (just need the struct for convenience)
         if (isToInner) { // single --> inner
             fakeNode = new ISTNode(childrenList, childrenList.size());
