@@ -509,14 +509,34 @@ public class ISTTXTest {
         System.out.println("Finished Mixed\n");
         System.out.println("GVC = " + TX.GVC.get());
 
-        keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
-        valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+//        keyList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
+//        valueList = totalKeyList.subList(amountOfKeys2, amountOfKeys + amountOfKeys2);
 
         assert myTree.checkRep();
 
-//+-
+// REMOVES
+        System.out.println("Starting Removes...\n");
+        threads = new ArrayList<>(numThreads);
+        index = 0;
+        for (int i = 0; i < numThreads; i++) {
+            threads.add(new Thread(new ISTComplexRun("T" + i, myTree, keyList.subList(index, index + (amountOfKeys / numThreads)),
+                    valueList.subList(index, index + (amountOfKeys / numThreads)), new ArrayList<>(), new ArrayList<>(), "remove", true)));
+            index += amountOfKeys / numThreads;
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads.get(i).join();
+        }
+        myTree.debugCheckRebuild();
+        myTree.checkLevels();
+        System.out.println("Finished Removes\n");
+        System.out.println("GVC = " + TX.GVC.get());
 
-//       }
+        System.out.println("Test is done!\n");
+
+        System.out.println("Num Of Aborts = " + TX.abortCount);
     }
 
     public class ISTSimpleRun implements Runnable {

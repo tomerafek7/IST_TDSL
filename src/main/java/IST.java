@@ -71,29 +71,41 @@ public class IST {
             int idx = interpolate( curNode, key);
             path.add(new Pair<>(curNode, idx));
             curNode = parentNode.inner.children.get(idx);
+//            if ( curNode == null || curNode.isLocked()){//TODO: why do we have null here? mystery!
+//                localStorage.earlyAbort = true;
+//                TX.print("middle abort - IST");
+//                TXLibExceptions excep = new TXLibExceptions();
+//                throw excep.new AbortException();
+//            }
             if (curNode == null){
                 int x = 1;
             }
             if(!curNode.isInner){ // reached a single
-                if (!curNode.tryLock()){
-                    //aborted because someone is changing the node
+                if ( curNode == null || curNode.isLocked()){//TODO: why do we have null here? mystery!
                     localStorage.earlyAbort = true;
                     TX.print("middle abort - IST");
                     TXLibExceptions excep = new TXLibExceptions();
                     throw excep.new AbortException();
                 }
-                if (curNode.isInner){ // the node was changed before we the lock , we can keep traversing.
-                    assert curNode.getVersion() >localStorage.readVersion;
-                    curNode.unlock();
-                    continue;
-                }
+//                if (!curNode.tryLock()){
+//                    //aborted because someone is changing the node
+//                    localStorage.earlyAbort = true;
+//                    TX.print("middle abort - IST");
+//                    TXLibExceptions excep = new TXLibExceptions();
+//                    throw excep.new AbortException();
+//                }
+//                if (curNode.isInner){ // the node was changed before we the lock , we can keep traversing.
+//                    assert curNode.getVersion() >localStorage.readVersion;
+//                    curNode.unlock();
+//                    continue;
+//                }
                 localStorage.ISTPutIntoReadSet(curNode);
                 ISTNode localNode = traverseLocalTree(curNode,key,localStorage);
                 if (localNode == curNode){
-                    curNode.unlock();
+//                    curNode.unlock();
                     return curNode;
                 } else { //TODO: here we dont need to use write set (we are local), can optimize
-                    curNode.unlock();
+//                    curNode.unlock();
                     return localNode;
                 }
                 //return traverseLocalTree(curNode, key, localStorage);
