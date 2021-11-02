@@ -7,9 +7,14 @@ import java.util.concurrent.Executors;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import com.google.common.base.Stopwatch;
 
 public class ISTWorkLoad {
 
+    IST tree;
+    List<Integer> localList;
+    Random random;
     int numThreads;
     int numTX;
     int numOpsPerTX;
@@ -18,9 +23,11 @@ public class ISTWorkLoad {
     double deleteRatio;
     int maxKey;
     int startAmountOfKeys;
-    List<Integer> localList;
 
     ISTWorkLoad(HashMap<String, String> config){
+        tree = new IST();
+        localList = new ArrayList<>();
+        random = new Random(0);
         numThreads = Integer.parseInt(config.get("numThreads"));
         numTX = Integer.parseInt(config.get("numTX"));
         numOpsPerTX = Integer.parseInt(config.get("numOpsPerTX"));
@@ -49,46 +56,96 @@ public class ISTWorkLoad {
         return configMap;
     }
 
+    public List<ISTTask> createTasks(){
+        List<ISTTask> tasksList = new ArrayList<>();
+        for(int i=0; i<numTX; i++){
+            List<ISTOperation> opList = new ArrayList<>();
+            opList.addAll(addInserts((int) (numOpsPerTX * writeRatio)));
+            opList.addAll(addRemoves((int) (numOpsPerTX * deleteRatio)));
+            opList.addAll(addLookups((int) (numOpsPerTX * readRatio)));
+            tasksList.add(new ISTTask(opList, tree));
+        }
+        return tasksList;
+    }
+
     public List<ISTOperation> addInserts(int num){
-        Random random = new Random(1);
         List<ISTOperation> tmpList = new ArrayList<>();
         for (int i = 0; i<num; i++){
             int key = random.nextInt(maxKey);
             int value = random.nextInt();
             tmpList.add(new ISTOperation(key,value,"insert"));
-            localList.add()
+            localList.add(key);
         }
         return tmpList;
     }
 
     public List<ISTOperation> addRemoves(int num){
-        List<Integer> localList = new ArrayList<>();
-        Random random = new Random(1);
-        List<ISTOperation> tmpList= new ArrayList<>();
+        List<ISTOperation> tmpList = new ArrayList<>();
         for (int i = 0; i<num; i++){
-            tmpList.add(new ISTOperation(localList.get(random.nextInt(localList.size())),0,"remove"));
+            int key = localList.get(random.nextInt(localList.size()));
+            tmpList.add(new ISTOperation(key,0,"remove"));
+            localList.remove(key);
         }
+        return tmpList;
     }
 
     public List<ISTOperation> addLookups(int num){
-        List<Integer> localList = new ArrayList<>();
-        Random random = new Random(1);
-        List<ISTOperation> tmpList= new ArrayList<>();
+        List<ISTOperation> tmpList = new ArrayList<>();
         for (int i = 0; i<num; i++){
             tmpList.add(new ISTOperation(localList.get(random.nextInt(localList.size())),0,"lookup"));
+        }
+        return tmpList;
+    }
+
+    public void warmUpTree(){
+        List<ISTOperation> opList = addInserts(startAmountOfKeys);
+        Thread thread = new Thread(new ISTTask(opList, tree));
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // after inserting all keys - lookup each one in order to force rebuild
+        List<ISTOperation> lookupList = new ArrayList<>();
+        for(ISTOperation op : opList){
+            lookupList.add(new ISTOperation(op.key, 0, "lookup"));
+        }
+        thread = new Thread(new ISTTask(lookupList, tree));
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        tree.rebuild(tree.root.inner.children.get(0),tree.root,0);
+        tree.checkLevels();
+//        tree.debugCheckRebuild();
+    }
+
+
+    public void executeTasks(List<ISTTask> tasksList){
+        ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+        for(ISTTask task : tasksList){
+            pool.execute(task);
+        }
+        pool.shutdown();
+        try {
+            pool.awaitTermination(30, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
     public static void main(String[] args){
         ISTWorkLoad workLoad = new ISTWorkLoad(parseConfig(args[0]));
-        System.out.println("numThreads = " + workLoad.numThreads);
-        System.out.println("numTX = " + workLoad.numTX);
-        System.out.println("numOpsPerTX = " + workLoad.numOpsPerTX);
-        System.out.println("readRatio = " + workLoad.readRatio);
-        System.out.println("writeRatio = " + workLoad.writeRatio);
-        System.out.println("deleteRatio = " + workLoad.deleteRatio);
-        System.out.println("maxKey = " + workLoad.maxKey);
-        System.out.println("startAmountOfKeys = " + workLoad.startAmountOfKeys);
+        workLoad.warmUpTree(); // first, "warm-up" the tree
+        List<ISTTask> tasksList = workLoad.createTasks(); // create all tasks
+        Stopwatch stopwatch = Stopwatch.createStarted();// measure time
+        workLoad.executeTasks(tasksList); // now execute all tasks
+        long millis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        System.out.println("Finished IST WorkLoad after " + millis + " [ms]");
+        System.out.println("Num Of Aborts = " + TX.abortCount);
     }
 
 }

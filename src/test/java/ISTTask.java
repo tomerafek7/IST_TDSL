@@ -16,38 +16,35 @@ public class ISTTask implements  Runnable{
             try {
                 try {
                     TX.TXbegin();
+                    System.out.println("Starting task #" + TX.lStorage.get().TxNum + ", TID = " + Thread.currentThread().getId());
                     for (ISTOperation operation: operations){
                         switch (operation.type){
                             case "insert":
-                                TX.print("insert  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                System.out.println("insert  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
                                 tree.insert(operation.key, operation.value);
-//                                Assert.assertEquals(operation.value, tree.lookup(operation.key);
+                                break;
                             case "remove":
-                                TX.print("remove  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                System.out.println("remove  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
                                 tree.remove(operation.key);
+                                break;
                             case "lookup":
-                                TX.print("lookup  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                System.out.println("lookup  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
                                 tree.lookup(operation.key);
+                                break;
                         }
-
                     }
 
                 } finally {
                     TX.TXend();
-                    if(TX.DEBUG_MODE_IST) {
-                        tree.debugCheckRebuild();
-                        tree.checkLevels();
-                    }
+                    tree.checkLevels();
 //                        TXLibExceptions excep = new TXLibExceptions();
 //                        throw excep.new AbortException();
                 }
-            }catch (TXLibExceptions.AbortException exp) {
+            } catch (TXLibExceptions.AbortException exp) {
                 TX.print("abort");
                 continue;
             }
             break;
         }
-
-
     }
 }

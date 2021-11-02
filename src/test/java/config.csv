@@ -1,6 +1,6 @@
 numThreads,32
-numTX,1000
-numOpsPerTX,10
+numTX,4000
+numOpsPerTX,5
 readRatio,0.5
 writeRatio,0.5
 deleteRatio,0

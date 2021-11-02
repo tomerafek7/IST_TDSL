@@ -366,17 +366,16 @@ public class TX {
     }
 
     public static void print(String str){
-//        try
-//        {
-//            String filename= "output_T" + lStorage.get().tid + ".txt";
-//            FileWriter fw = new FileWriter(filename,true); //the true will append the new data
-//            fw.write(str + "\n"); //appends the string to the file
-//            fw.close();
-//        }
-//        catch(IOException ioe)
-//        {
-//            System.err.println("IOException: " + ioe.getMessage());
-//        }
+        if(DEBUG_MODE_IST) {
+            try {
+                String filename = "output_T" + lStorage.get().tid + ".txt";
+                FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+                fw.write(str + "\n"); //appends the string to the file
+                fw.close();
+            } catch (IOException ioe) {
+                System.err.println("IOException: " + ioe.getMessage());
+            }
+        }
     }
 
     public static void write_stats(String str){
