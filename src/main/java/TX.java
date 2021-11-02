@@ -380,15 +380,15 @@ public class TX {
     }
 
     public static void write_stats(String str){
-//        try {
-//            String dir = "C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats";
-//            String filename = "stats_T" + lStorage.get().tid + ".csv";
-//            FileWriter fw = new FileWriter(dir + "/" + filename, true); //the true will append the new data
-//            fw.write(str + "\n"); //appends the string to the file
-//            fw.close();
-//        } catch (IOException ioe) {
-//            System.err.println("IOException: " + ioe.getMessage());
-//        }
+        try {
+            String dir = "C:\\Users\\DELL\\PycharmProjects\\IST_TDSL_Stats";
+            String filename = "stats_T" + lStorage.get().tid + ".csv";
+            FileWriter fw = new FileWriter(dir + "/" + filename, true); //the true will append the new data
+            fw.write(str + "\n"); //appends the string to the file
+            fw.close();
+        } catch (IOException ioe) {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
     }
 
 }

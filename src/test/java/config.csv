@@ -1,0 +1,8 @@
+numThreads,32
+numTX,1000
+numOpsPerTX,10
+readRatio,0.5
+writeRatio,0.5
+deleteRatio,0
+maxKey,10000
+startAmountOfKeys,1000

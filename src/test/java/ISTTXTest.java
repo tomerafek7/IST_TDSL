@@ -379,7 +379,7 @@ public class ISTTXTest {
 
     @Test
     public void complexMultiThreadTestDoubleInsert() throws InterruptedException, FileNotFoundException {
-        // Thread.sleep(10*1000); // to enable profiling
+        Thread.sleep(20*1000); // to enable profiling
 
 //         while (true) {
 //        System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
@@ -392,8 +392,8 @@ public class ISTTXTest {
         HashSet<Integer> keySet = new HashSet<>();
         List<Integer> initialValueList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
-        int amountOfKeys = 1000000;
-        int amountOfKeys2 = 500000;
+        int amountOfKeys = 100000;
+        int amountOfKeys2 = 50000;
         while (keySet.size() != amountOfKeys + amountOfKeys2) {
             keySet.add(rand.nextInt());
             initialValueList.add(rand.nextInt());
