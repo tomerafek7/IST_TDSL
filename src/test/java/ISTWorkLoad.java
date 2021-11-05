@@ -119,7 +119,9 @@ public class ISTWorkLoad {
             e.printStackTrace();
         }
         tree.rebuild(tree.root.inner.children.get(0),tree.root,0);
-        tree.checkLevels();
+        if(TX.DEBUG_MODE_IST) {
+            tree.checkLevels();
+        }
 //        tree.debugCheckRebuild();
     }
 
@@ -138,6 +140,7 @@ public class ISTWorkLoad {
     }
 
     public static void main(String[] args){
+        System.out.println("Starting IST WorkLoad Test");
         ISTWorkLoad workLoad = new ISTWorkLoad(parseConfig(args[0]));
         workLoad.warmUpTree(); // first, "warm-up" the tree
         List<ISTTask> tasksList = workLoad.createTasks(); // create all tasks

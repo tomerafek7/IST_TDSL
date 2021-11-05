@@ -351,7 +351,7 @@ public class TX {
 
         if (abort) {
             abortCount.incrementAndGet();
-            TX.write_stats(GVC.get() + ",1");
+            //TX.write_stats(GVC.get() + ",1");
             TXLibExceptions excep = new TXLibExceptions();
             throw excep.new AbortException();
         }

@@ -16,19 +16,27 @@ public class ISTTask implements  Runnable{
             try {
                 try {
                     TX.TXbegin();
-                    System.out.println("Starting task #" + TX.lStorage.get().TxNum + ", TID = " + Thread.currentThread().getId());
+                    if(TX.DEBUG_MODE_IST) {
+                        System.out.println("Starting task #" + TX.lStorage.get().TxNum + ", TID = " + Thread.currentThread().getId());
+                    }
                     for (ISTOperation operation: operations){
                         switch (operation.type){
                             case "insert":
-                                System.out.println("insert  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                if(TX.DEBUG_MODE_IST) {
+                                    System.out.println("insert  , TXnum: " + TX.lStorage.get().TxNum + ", key: " + operation.key);
+                                }
                                 tree.insert(operation.key, operation.value);
                                 break;
                             case "remove":
-                                System.out.println("remove  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                if(TX.DEBUG_MODE_IST) {
+                                    System.out.println("remove  , TXnum: " + TX.lStorage.get().TxNum + ", key: " + operation.key);
+                                }
                                 tree.remove(operation.key);
                                 break;
                             case "lookup":
-                                System.out.println("lookup  , TXnum: " + TX.lStorage.get().TxNum + ", key: " +operation.key);
+                                if(TX.DEBUG_MODE_IST) {
+                                    System.out.println("lookup  , TXnum: " + TX.lStorage.get().TxNum + ", key: " + operation.key);
+                                }
                                 tree.lookup(operation.key);
                                 break;
                         }
@@ -36,9 +44,9 @@ public class ISTTask implements  Runnable{
 
                 } finally {
                     TX.TXend();
-                    tree.checkLevels();
-//                        TXLibExceptions excep = new TXLibExceptions();
-//                        throw excep.new AbortException();
+                    if(TX.DEBUG_MODE_IST) {
+                        tree.checkLevels();
+                    }
                 }
             } catch (TXLibExceptions.AbortException exp) {
                 TX.print("abort");
