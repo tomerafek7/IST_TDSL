@@ -34,16 +34,13 @@ public class ISTRebuildObject {
         isFirst = 0;
         subTreeDebugFirst = true;
     }
-    static final int MIN_TREE_LEAF_SIZE = 4; //TODO: might fight a better value
-    static final int COLLABORATION_THRESHOLD = 60; //TODO: might fight a better value
-
 
     public ISTNode buildIdealISTree(List<ISTNode> KVPairList) {
         if(TX.DEBUG_MODE_IST) {
             debugCheckKVPairsList(KVPairList);
         }
         int numOfLeaves = KVPairList.size();
-        if (numOfLeaves <= MIN_TREE_LEAF_SIZE) {
+        if (numOfLeaves <= IST.rebuildMinTreeLeafSize) {
             ISTNode myNode = new ISTNode(KVPairList, numOfLeaves);
 //            myNode.children = new ArrayList<ISTNode>();
 //            myNode.children.add(KVPairList.get(0));
@@ -135,7 +132,7 @@ public class ISTRebuildObject {
 
     void createIdealCollaborative(int keyCount) {
         ISTNode tempNewIstTree;
-        if (keyCount <= COLLABORATION_THRESHOLD) {
+        if (keyCount <= IST.rebuildCollaborationThreshold) {
             ArrayList<ISTNode> list = new ArrayList<>();
             list = createKVPairsList(list, oldIstTree,0, keyCount);
             if (TX.DEBUG_MODE_IST) {
@@ -149,7 +146,7 @@ public class ISTRebuildObject {
         newIstTreeReference.compareAndSet(null,tempNewIstTree);
         newIstTree = newIstTreeReference.get();
 
-       if (keyCount > COLLABORATION_THRESHOLD) { // collaboration case
+       if (keyCount > IST.rebuildCollaborationThreshold) { // collaboration case
            // each thread creates lock list
            ArrayList<ReentrantLock> locks = new ArrayList<>();
            for (int i=0; i<newIstTree.inner.numOfChildren; i++){ // init array as nulls
@@ -200,7 +197,7 @@ public class ISTRebuildObject {
         childrenLocksCount.compareAndSet(null, locks);
         locks = childrenLocksCount.get();
 
-        if (subTreeRoot.inner.numOfChildren > COLLABORATION_THRESHOLD) {
+        if (subTreeRoot.inner.numOfChildren > IST.rebuildCollaborationThreshold) {
             while (true) { // work queue
                 int index = subTreeRoot.inner.waitQueueIndexCount.getAndIncrement();
                 if (index >= subTreeRoot.inner.numOfChildren) break;

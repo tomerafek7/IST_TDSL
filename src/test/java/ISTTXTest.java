@@ -9,7 +9,7 @@ public class ISTTXTest {
 
     //@Test
     public void randomTest() {
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -59,7 +59,7 @@ public class ISTTXTest {
     //@Test
     public void randomTest3() throws FileNotFoundException {
         //System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output123.txt"))));
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -165,7 +165,7 @@ public class ISTTXTest {
 
     //@Test
     public void randomTest2() {
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -201,7 +201,7 @@ public class ISTTXTest {
     //@Test
     public void simpleMultiThreadTest() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         int numThreads = 10;
         Random rn = new Random(0);
         ArrayList<Thread> threads = new ArrayList<>(numThreads);
@@ -259,7 +259,7 @@ public class ISTTXTest {
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
             // remove output_T* files before test.
             removeOutputFiles();
-            IST myTree = new IST();
+            IST myTree = new IST(4,50);
             int numThreads = 10;
             Random rand = new Random(1);
             HashSet<Integer> keySet = new HashSet<>();
@@ -386,7 +386,7 @@ public class ISTTXTest {
 //        System.setErr(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
         // remove output_T* files before test.
         removeOutputFiles();
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         int numThreads = 10;
         Random rand = new Random(1);
         HashSet<Integer> keySet = new HashSet<>();

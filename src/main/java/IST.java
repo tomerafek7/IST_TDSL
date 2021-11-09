@@ -8,15 +8,18 @@ public class IST {
     ISTNode root;
     final static int INIT_SIZE = 1;
     static final boolean DEBUG_MODE = true;
+    static int rebuildMinTreeLeafSize;
+    static int rebuildCollaborationThreshold;
 
-    IST(){
+    IST(int rebuildMinTreeLeafSize, int rebuildCollaborationThreshold){
         this.root = new ISTNode(INIT_SIZE, 0);
         this.root.minKey = Integer.MAX_VALUE;
         this.root.maxKey = Integer.MAX_VALUE;
         //this.root.keys.add(Integer.MAX_VALUE);
         this.root.inner.children.set(0,new ISTNode(0, null, true));
         this.root.inner.keys.set(0, Integer.MAX_VALUE);
-
+        IST.rebuildMinTreeLeafSize = rebuildMinTreeLeafSize;
+        IST.rebuildCollaborationThreshold = rebuildCollaborationThreshold;
     }
 
     public int interpolate(ISTNode node, Integer key){

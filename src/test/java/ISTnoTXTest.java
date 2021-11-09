@@ -12,14 +12,14 @@ public class ISTnoTXTest {
 
     @Test
     public void testCreation(){
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Assert.assertNotNull(myTree.root);
         Assert.assertTrue((myTree.root.inner.children.get(0)).single.isEmpty);
     }
 
     @Test
     public void testInsert(){
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");
@@ -40,7 +40,7 @@ public class ISTnoTXTest {
 
     @Test
     public void testRemove() {
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");
@@ -68,7 +68,7 @@ public class ISTnoTXTest {
 
     @Test
     public void randomTest(){
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -106,7 +106,7 @@ public class ISTnoTXTest {
 
     @Test
     public void randomTest2(){
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
@@ -141,7 +141,7 @@ public class ISTnoTXTest {
 
     @Test
     public void testRebuild(){
-        IST myTree = new IST();
+        IST myTree = new IST(4,50);
         myTree.insert(3,"hi");
         Assert.assertEquals(myTree.lookup(3), "hi");
         myTree.insert(3,"bye");

@@ -23,9 +23,10 @@ public class ISTWorkLoad {
     double deleteRatio;
     int maxKey;
     int startAmountOfKeys;
+    int rebuildCollaborationThreshold;
+    int rebuildMinTreeLeafSize;
 
     ISTWorkLoad(HashMap<String, String> config){
-        tree = new IST();
         localList = new ArrayList<>();
         random = new Random(0);
         numThreads = Integer.parseInt(config.get("numThreads"));
@@ -36,6 +37,11 @@ public class ISTWorkLoad {
         deleteRatio = Double.parseDouble(config.get("deleteRatio"));
         maxKey = Integer.parseInt(config.get("maxKey"));
         startAmountOfKeys = Integer.parseInt(config.get("startAmountOfKeys"));
+        rebuildMinTreeLeafSize = Integer.parseInt(config.get("rebuildMinTreeLeafSize"));
+        rebuildCollaborationThreshold = Integer.parseInt(config.get("rebuildCollaborationThreshold"));
+
+        tree = new IST(rebuildMinTreeLeafSize, rebuildCollaborationThreshold);
+
     }
 
     public static HashMap<String, String> parseConfig(String configFile){
