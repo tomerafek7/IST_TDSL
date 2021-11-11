@@ -1,3 +1,4 @@
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ public class ISTWorkLoad {
 
     IST tree;
     List<Integer> localList;
+    int removesIndex;
     Random random;
     int numThreads;
     int numTX;
@@ -28,6 +30,7 @@ public class ISTWorkLoad {
 
     ISTWorkLoad(HashMap<String, String> config){
         localList = new ArrayList<>();
+        removesIndex = 0;
         random = new Random(0);
         numThreads = Integer.parseInt(config.get("numThreads"));
         numTX = Integer.parseInt(config.get("numTX"));
@@ -64,9 +67,18 @@ public class ISTWorkLoad {
 
     public List<ISTTask> createTasks(){
         List<ISTTask> tasksList = new ArrayList<>();
-        for(int i=0; i<numTX; i++){
+        List<List<ISTOperation>> tempList = new ArrayList<>();
+        // first define inserts
+        for(int i=0; i<numTX; i++) {
             List<ISTOperation> opList = new ArrayList<>();
             opList.addAll(addInserts((int) (numOpsPerTX * writeRatio)));
+            tempList.add(opList);
+        }
+        // shuffle inserts to create randomization:
+        Collections.shuffle(localList, random);
+        // later deal with removes + lookups
+        for(int i=0; i<numTX; i++){
+            List<ISTOperation> opList = tempList.get(i);
             opList.addAll(addRemoves((int) (numOpsPerTX * deleteRatio)));
             opList.addAll(addLookups((int) (numOpsPerTX * readRatio)));
             tasksList.add(new ISTTask(opList, tree));
@@ -88,10 +100,8 @@ public class ISTWorkLoad {
     public List<ISTOperation> addRemoves(int num){
         List<ISTOperation> tmpList = new ArrayList<>();
         for (int i = 0; i<num; i++){
-            int index = random.nextInt(localList.size());
-            int key = localList.get(index);
+            int key = localList.get(removesIndex++);
             tmpList.add(new ISTOperation(key,0,"remove"));
-            localList.remove(index);
         }
         return tmpList;
     }
