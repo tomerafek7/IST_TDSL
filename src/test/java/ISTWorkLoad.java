@@ -27,6 +27,8 @@ public class ISTWorkLoad {
     int startAmountOfKeys;
     int rebuildCollaborationThreshold;
     int rebuildMinTreeLeafSize;
+    double rebuildUpdatesRatioThreshold;
+    int rebuildMinUpdatesThreshold;
 
     ISTWorkLoad(HashMap<String, String> config){
         localList = new ArrayList<>();
@@ -42,8 +44,11 @@ public class ISTWorkLoad {
         startAmountOfKeys = Integer.parseInt(config.get("startAmountOfKeys"));
         rebuildMinTreeLeafSize = Integer.parseInt(config.get("rebuildMinTreeLeafSize"));
         rebuildCollaborationThreshold = Integer.parseInt(config.get("rebuildCollaborationThreshold"));
+        rebuildUpdatesRatioThreshold = Double.parseDouble(config.get("rebuildUpdatesRatioThreshold"));
+        rebuildMinUpdatesThreshold = Integer.parseInt(config.get("rebuildMinUpdatesThreshold"));
 
-        tree = new IST(rebuildMinTreeLeafSize, rebuildCollaborationThreshold);
+        tree = new IST(rebuildMinTreeLeafSize, rebuildCollaborationThreshold,
+                rebuildUpdatesRatioThreshold, rebuildMinUpdatesThreshold);
 
     }
 

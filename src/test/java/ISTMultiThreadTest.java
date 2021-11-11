@@ -40,7 +40,7 @@ public class ISTMultiThreadTest
             }
         });
 
-        IST myTree = new IST(4,50);
+        IST myTree = new IST(4,50,0.25,10);
         Random rand = new Random(1);
         List<Integer> keyList = new ArrayList<>();
         List<Integer> valueList = new ArrayList<>();
