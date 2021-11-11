@@ -88,9 +88,10 @@ public class ISTWorkLoad {
     public List<ISTOperation> addRemoves(int num){
         List<ISTOperation> tmpList = new ArrayList<>();
         for (int i = 0; i<num; i++){
-            int key = localList.get(random.nextInt(localList.size()));
+            int index = random.nextInt(localList.size());
+            int key = localList.get(index);
             tmpList.add(new ISTOperation(key,0,"remove"));
-            localList.remove((Integer) key);
+            localList.remove(index);
         }
         return tmpList;
     }

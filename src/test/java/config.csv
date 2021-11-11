@@ -1,9 +1,9 @@
 numThreads,32
 numTX,10000
 numOpsPerTX,10
-readRatio,0.5
+readRatio,0.2
 writeRatio,0.5
-deleteRatio,0
+deleteRatio,0.3
 maxKey,10000
 startAmountOfKeys,1000
 rebuildMinTreeLeafSize,4
