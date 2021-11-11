@@ -90,7 +90,7 @@ public class ISTWorkLoad {
         for (int i = 0; i<num; i++){
             int key = localList.get(random.nextInt(localList.size()));
             tmpList.add(new ISTOperation(key,0,"remove"));
-            localList.remove(key);
+            localList.remove((Integer) key);
         }
         return tmpList;
     }
