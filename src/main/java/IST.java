@@ -90,19 +90,19 @@ public class IST {
                 ISTNode localNode = traverseLocalTree(curNode, key, localStorage);
                 if (localNode == curNode){
                     return curNode;
-                } else { //TODO: here we dont need to use write set (we are local), can optimize
+                } else { // TODO: here we don't need to use write set (we are local), can optimize
                     return localNode;
                 }
                 //return traverseLocalTree(curNode, key, localStorage);
             } else { // still an inner
-                if(localStorage.ISTReadSet.contains(curNode)){//TODO : check performance
+                if(localStorage.ISTReadSet.contains(curNode)){ //TODO : check performance
                     // aborting because someone have committed the node which is in our read set
                     localStorage.earlyAbort = true;
                     TX.print("middle abort - IST");
                     TXLibExceptions excep = new TXLibExceptions();
                     throw excep.new AbortException();
                 }
-                curNode = checkAndHelpRebuild(curNode, parentNode, idx,localStorage);
+                curNode = checkAndHelpRebuild(curNode, parentNode, idx, localStorage);
                 //debugCheckNodesThreadsMatching(iter); // debug
                 if(!curNode.isInner) { // corner case of a rebuild with all empty leaves
                     return curNode;

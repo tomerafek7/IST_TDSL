@@ -120,27 +120,40 @@ public class ISTWorkLoad {
     }
 
     public void warmUpTree(){
-        List<ISTOperation> opList = addInserts(startAmountOfKeys);
-        Thread thread = new Thread(new ISTTask(opList, tree));
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        List<ISTTask> tasksList = new ArrayList<>();
+        int numWarmupThreads = 10;
+        for(int i=0; i<numWarmupThreads; i++) {
+            List<ISTOperation> opList = new ArrayList<>();
+            opList.addAll(addInserts(startAmountOfKeys/numWarmupThreads));
+            tasksList.add(new ISTTask(opList, tree));
         }
+        executeTasks(numWarmupThreads, tasksList);
+//        Thread thread = new Thread(new ISTTask(opList, tree));
+//        thread.start();
+//        try {
+//            thread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         // after inserting all keys - lookup each one in order to force rebuild
         List<ISTOperation> lookupList = new ArrayList<>();
-        for(ISTOperation op : opList){
-            lookupList.add(new ISTOperation(op.key, 0, "lookup"));
+//        for(ISTOperation op : opList){
+//            lookupList.add(new ISTOperation(op.key, 0, "lookup"));
+//        }
+        for(ISTTask task : tasksList){
+            for(ISTOperation op : task.operations){
+                lookupList.add(new ISTOperation(op.key, 0, "lookup"));
+            }
         }
-        thread = new Thread(new ISTTask(lookupList, tree));
+        Thread thread = new Thread(new ISTTask(lookupList, tree));
         thread.start();
         try {
             thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        tree.rebuild(tree.root.inner.children.get(0),tree.root,0);
+        //tree.rebuild(tree.root.inner.children.get(0),tree.root,0);
+        tree.checkLevels();
         if(TX.DEBUG_MODE_IST) {
             tree.checkLevels();
         }
@@ -148,7 +161,7 @@ public class ISTWorkLoad {
     }
 
 
-    public void executeTasks(List<ISTTask> tasksList){
+    public void executeTasks(int numThreads, List<ISTTask> tasksList){
         ExecutorService pool = Executors.newFixedThreadPool(numThreads);
         for(ISTTask task : tasksList){
             pool.execute(task);
@@ -161,13 +174,14 @@ public class ISTWorkLoad {
         }
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws InterruptedException {
+        // Thread.sleep(20*1000); // to enable profiling
         System.out.println("Starting IST WorkLoad Test");
         ISTWorkLoad workLoad = new ISTWorkLoad(parseConfig(args[0]));
         workLoad.warmUpTree(); // first, "warm-up" the tree
         List<ISTTask> tasksList = workLoad.createTasks(); // create all tasks
         Stopwatch stopwatch = Stopwatch.createStarted();// measure time
-        workLoad.executeTasks(tasksList); // now execute all tasks
+        workLoad.executeTasks(workLoad.numThreads, tasksList); // now execute all tasks
         long millis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         System.out.println("Finished IST WorkLoad after " + millis + " [ms]");
         System.out.println("Num Of Aborts = " + TX.abortCount);
