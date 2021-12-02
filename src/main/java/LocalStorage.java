@@ -21,9 +21,7 @@ public class LocalStorage {
     protected HashMap<LinkedList, ArrayList<LNode>> indexAdd = new HashMap<LinkedList, ArrayList<LNode>>();
     protected HashMap<LinkedList, ArrayList<LNode>> indexRemove = new HashMap<LinkedList, ArrayList<LNode>>();
     // IST:
-//    protected HashMap<ISTNode, ISTNode> ISTWriteSet = new HashMap<>();
     protected BiMap<ISTNode, ISTNode> ISTWriteSet = HashBiMap.create();
-    protected HashMap<ISTNode, ISTNode> ISTInverseWriteSet = new HashMap<>();  // maintaining a map of newNode -> oldNode
     protected HashSet<ISTNode> ISTReadSet = new HashSet<>();
     protected HashSet<ISTNode> decActiveList = new HashSet<>();
     protected ArrayList<ISTNode> incUpdateList = new ArrayList<>();
@@ -49,17 +47,12 @@ public class LocalStorage {
     }
 
     protected void ISTPutIntoWriteSet(ISTNode node, boolean isToInner, List<ISTNode> childrenList, Integer key, Object val, boolean isEmpty) {
-//        ISTWriteElement we = new ISTWriteElement();
-        //ISTPutIntoReadSet(node); // debug - remove!
-      //  assert !node.isInner; TODO: not locked and maybe changed by other thread
-
         ISTNode fakeNode; // it is fake because we just use its single/inner, not the entire node (just need the struct for convenience)
         if (isToInner) { // single --> inner
             fakeNode = new ISTNode(childrenList, childrenList.size());
         } else { // single --> single
             fakeNode = new ISTNode(key, val, isEmpty);
         }
-        // TODO: review solution
         ISTNode origin = ISTWriteSet.inverse().get(node);
         ISTNode prev;
         if(origin != null){ // this node is a value in WriteSet HashMap - we want to replace it, while keeping the same key.
@@ -69,36 +62,7 @@ public class LocalStorage {
         }
         assert prev == null || !prev.isInner; // this key could be inside before only if it was a single.
         readOnly = false;
-
-//            ISTNode fakeNode; // it is fake because we just use its single/inner, not the entire node (just need the struct for convenience)
-//            if (isToInner) { // single --> inner
-//                fakeNode = new ISTNode(childrenList, childrenList.size());
-//            } else { // single --> single
-//                fakeNode = new ISTNode(key, val, isEmpty);
-//            }
-//            ISTNode prev = ISTWriteSet.put(node, fakeNode); // insert into Hash Map and get result.
-//            assert prev == null || !prev.isInner; // this key could be inside before only if it was a single.
-//            readOnly = false;
-
     }
-
-//        if(ISTInverseWriteSet.containsKey(node)){ // the old node replaced someone in the past
-//            ISTNode tempNode = ISTInverseWriteSet.get(node);
-//            assert !tempNode.isInner; // make sure that the replaced node is single - this is the only case in which we should get inside this block
-//            ISTWriteSet.replace(tempNode, newNode); // override old Node
-//            // updating the inverse map
-//            ISTInverseWriteSet.remove(node);
-//            ISTInverseWriteSet.put(newNode, tempNode);
-//        } else { // normal case
-//            ISTWriteSet.put(node, newNode);
-//            ISTInverseWriteSet.put(newNode, node); // maintaining an inverse map of newNode -> oldNode
-//    }
-//        we.isToInner = isToInner;
-//        we.childrenList = childrenList;
-//        we.key = key;
-//        we.val = val;
-//        we.isEmpty = isEmpty;
-//    }
 
     protected ISTNode ISTGetUpdatedNodeFromWriteSet(ISTNode node){
         if(ISTWriteSet.containsKey(node)) {
@@ -117,25 +81,6 @@ public class LocalStorage {
         }
         ISTReadSet.add(node);
     }
-
-        // if this node is in the cur TX write-set - read it from there
-//        if(ISTWriteSet.containsKey(node)) {
-//            return ISTWriteSet.get(node);
-//        }
-//            }ISTNode newNode = ISTWriteSet.get(node);
-//            if(we.isToInner){ // single -> inner
-//                // FIXME
-//                ISTNode newNode = new ISTNode(we.childrenList, we.childrenList.size());
-//                ISTWriteSet.replace()
-//                return
-//            } else { // single --> single
-//                // FIXME
-//                return new ISTNode(we.key, we.val, we.isEmpty);
-//            }
-//        }
-        // not in write-set:
-//        return node;
-//    }
 
     protected void addToIndexAdd(LinkedList list, LNode node) {
         ArrayList<LNode> nodes = indexAdd.get(list);

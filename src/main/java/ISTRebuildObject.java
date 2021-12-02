@@ -8,17 +8,12 @@ public class ISTRebuildObject {
     ISTNode oldIstTree;
     AtomicReference<ISTNode> newIstTreeReference;
     ISTNode newIstTree;
-    int indexInParent;//TODO: check if needed
+    int indexInParent;
     ISTNode parent;
     boolean finishedRebuild;
     ReentrantLock lock;
-    ReentrantLock debugCountLock;
     AtomicReference<ArrayList<ReentrantLock>> childrenLocksRebuild;
     AtomicReference<ArrayList<ReentrantLock>> childrenLocksCount;
-    int isFirst; // debug - remove
-    int debugSubTreeCount;
-    boolean subTreeDebugFirst;
-
 
     ISTRebuildObject(ISTNode oldTree, int indexInParent, ISTNode parentNode){
         oldIstTree = oldTree;
@@ -28,11 +23,8 @@ public class ISTRebuildObject {
         newIstTreeReference = new AtomicReference<>(null);
         newIstTree = null;
         lock = new ReentrantLock();
-        debugCountLock = new ReentrantLock();
         childrenLocksRebuild = new AtomicReference<>(null);
         childrenLocksCount = new AtomicReference<>(null);
-        isFirst = 0;
-        subTreeDebugFirst = true;
     }
 
     public ISTNode buildIdealISTree(List<ISTNode> KVPairList) {
@@ -42,8 +34,6 @@ public class ISTRebuildObject {
         int numOfLeaves = KVPairList.size();
         if (numOfLeaves <= IST.rebuildMinTreeLeafSize) {
             ISTNode myNode = new ISTNode(KVPairList, numOfLeaves);
-//            myNode.children = new ArrayList<ISTNode>();
-//            myNode.children.add(KVPairList.get(0));
             return myNode;
         }
         int numChildren = (int) Math.floor(Math.sqrt(numOfLeaves));
@@ -158,7 +148,6 @@ public class ISTRebuildObject {
            while (true) {
                int index = newIstTree.inner.waitQueueIndexRebuild.getAndIncrement() ;
                if (index >= newIstTree.inner.numOfChildren) break; // each child has a thread working on it;
-               //locks.set(index, new ReentrantLock()); // not needed because we set the locks above
                rebuildAndSetChild(keyCount, index, locks.get(index));
            }
            for (int i=0; i<newIstTree.inner.numOfChildren; i ++){
@@ -172,19 +161,6 @@ public class ISTRebuildObject {
        }
 
     }
-
-//    public int serialSubTreeCount(ISTNode curNode){
-//        debugCountLock.lock();
-//        try{
-//            if(subTreeDebugFirst){
-//                subTreeDebugFirst = false;
-//                debugSubTreeCount = subTreeCount(curNode);
-//            }
-//        } finally {
-//            debugCountLock.unlock();
-//        }
-//        return debugSubTreeCount;
-//    }
 
     public int subTreeCount(ISTNode subTreeRoot){
 
@@ -242,40 +218,6 @@ public class ISTRebuildObject {
         return keyCount;
 
     }
-
-//    public int subTreeCount(ISTNode curNode){
-//
-//        if (!curNode.isInner){
-//            return (curNode.single).isEmpty ? 0 : 1;
-//        }
-//        // here node is inner
-//        if (curNode.inner.numOfChildren > COLLABORATION_THRESHOLD) {
-//            while (true) { // work queue
-//                int index = curNode.inner.waitQueueIndexCount.getAndIncrement();
-//                if (index >= curNode.inner.numOfChildren) break;
-//                subTreeCount(curNode.inner.children.get(index));
-//            }
-//        }
-//        int keyCount = 0;
-//        for (ISTNode child : curNode.inner.children){
-//            if (!child.isInner){
-//                keyCount += (child.single).isEmpty ? 0 : 1;
-//            } else { // inner
-//                //TODO: maor: i think we're good enough here, need to verify
-//                // TODO: need to read count & finished atomically!
-//                boolean finished = child.inner.finishedCount;
-//                if(finished) {
-//                    keyCount += child.inner.numOfLeaves;
-//                } else{
-//                  keyCount += subTreeCount(child);
-//                }
-//            }
-//        }
-//        curNode.inner.numOfLeaves = keyCount; // TODO: need to update both fields atomically!
-//        curNode.inner.finishedCount = true;
-//
-//        return keyCount;
-//    }
 
     void helpRebuild(){
         if (finishedRebuild){

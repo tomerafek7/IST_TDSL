@@ -40,14 +40,6 @@ public class ISTNode {
         this.maxKey = key;
     }
 
-    public void changeToInner(ISTInnerNode newInner){
-        inner = newInner;
-        single = null;
-        isInner = true;
-        minKey = inner.keys.get(0);
-        maxKey = inner.keys.get(inner.keys.size()-1);
-    }
-
     // lock methods copied from LNode:
 
     protected boolean tryLock() {

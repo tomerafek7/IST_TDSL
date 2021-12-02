@@ -128,18 +128,8 @@ public class ISTWorkLoad {
             tasksList.add(new ISTTask(opList, tree));
         }
         executeTasks(numWarmupThreads, tasksList);
-//        Thread thread = new Thread(new ISTTask(opList, tree));
-//        thread.start();
-//        try {
-//            thread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         // after inserting all keys - lookup each one in order to force rebuild
         List<ISTOperation> lookupList = new ArrayList<>();
-//        for(ISTOperation op : opList){
-//            lookupList.add(new ISTOperation(op.key, 0, "lookup"));
-//        }
         for(ISTTask task : tasksList){
             for(ISTOperation op : task.operations){
                 lookupList.add(new ISTOperation(op.key, 0, "lookup"));
@@ -153,7 +143,7 @@ public class ISTWorkLoad {
             e.printStackTrace();
         }
         //tree.rebuild(tree.root.inner.children.get(0),tree.root,0);
-        tree.checkLevels();
+        //tree.checkLevels();
         if(TX.DEBUG_MODE_IST) {
             tree.checkLevels();
         }

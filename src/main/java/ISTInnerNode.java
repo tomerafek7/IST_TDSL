@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,20 +34,13 @@ public class ISTInnerNode {
         waitQueueIndexRebuild = new AtomicInteger();
         numOfChildren = childrenList.size();
         children = new ArrayList<>(numOfChildren);
-//        children = new ArrayList<>(childrenList);
-
-        //rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>(numOfChildren -1);
         rebuildObjectAtomicReference = new AtomicReference<>(null);
         activeThreadsSet = ConcurrentHashMap.newKeySet();
-//        children = childrenList; TODO: maybe this is valid and better
 
         debugLock = new ReentrantLock(); // debug
         for (int i=0; i<childrenList.size(); i++){
-            if(childrenList.get(i).single == null){
-                int x = 1;
-            }
             children.add(new ISTNode(childrenList.get(i).single.key, childrenList.get(i).single.value, childrenList.get(i).single.isEmpty));
             if(i>0) keys.add(childrenList.get(i).single.key);
         }
@@ -63,7 +55,6 @@ public class ISTInnerNode {
         waitQueueIndexCount = new AtomicInteger();
         waitQueueIndexRebuild = new AtomicInteger();
         numOfChildren = numOfChildrenReceived;
-//        rebuildFlag = false;
         debugNumOfLeaves = 0;
         keys = new ArrayList<>();
         activeThreadsSet = ConcurrentHashMap.newKeySet();

@@ -1,13 +1,10 @@
 import com.sun.tools.javac.util.Pair;
-import sun.misc.Unsafe;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class IST {
 
     ISTNode root;
     final static int INIT_SIZE = 1;
-    static final boolean DEBUG_MODE = true;
     static int rebuildMinTreeLeafSize;
     static int rebuildCollaborationThreshold;
     static double rebuildUpdatesRatioThreshold;
@@ -457,16 +454,7 @@ public class IST {
         }
     }
 
-
-    public static void debugCheckNodesThreadsMatching(int iter) {
-        LocalStorage localStorage = TX.lStorage.get();
-        for(ISTNode node : localStorage.decActiveList) {
-            assert node.inner.activeThreadsSet.contains(localStorage.tid) : "ITER: " + iter + " Node " + node + " is in decActiveList, but Thread " + localStorage.tid + " isn't in activeThreadsSet";
-        }
-    }
-
-
-    public static ArrayList<ISTNode> createSortedList(ArrayList<ISTNode> list,
+    public static ArrayList<ISTNode> debugCreateSortedList(ArrayList<ISTNode> list,
                                                 ISTNode currentNode) {
         for (int i = 0; i < currentNode.inner.numOfChildren; i++) {
             ISTNode child = currentNode.inner.children.get(i);
@@ -476,31 +464,10 @@ public class IST {
                     list.add(child);
                 }
             } else { //child is inner node
-                list = createSortedList(list, (child));
+                list = debugCreateSortedList(list, (child));
             }
         }
         return list;
-    }
-    public static boolean debugCheckSortedTree (ISTNode currentNode){
-        ArrayList<ISTNode> List = new ArrayList<ISTNode>();
-        List = createSortedList(List,currentNode);
-        int last = 0;
-        int i=0;
-        for (ISTNode node : List){
-            if (i>0) {
-                if (node.single.key < last) {
-                    StringBuilder error = new StringBuilder();
-                    for (int j = i-5; j< i+5; j++){
-                        error.append(" ").append(List.get(j).single.key);
-                    }
-                    TX.print(error.toString());
-                    return false;
-                }
-            }
-            i++;
-            last = node.single.key;
-        }
-        return true;
     }
 }
 

@@ -1,9 +1,4 @@
 import org.junit.Assert;
-
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 
 public class ISTComplexRun implements Runnable {
@@ -16,7 +11,6 @@ public class ISTComplexRun implements Runnable {
     List<Integer> valueList2;
     String operation;
     boolean validOperation;
-    static double INSERT_PERCENT = 0.5;
     static int NUM_OPS_PER_TX = 20;
 
     public ISTComplexRun(String name, IST tree, List<Integer> keyList, List<Integer> valueList,

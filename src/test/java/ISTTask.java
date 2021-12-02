@@ -1,5 +1,3 @@
-import org.junit.Assert;
-
 import java.util.List;
 
 public class ISTTask implements  Runnable{

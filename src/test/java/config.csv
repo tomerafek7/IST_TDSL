@@ -1,10 +1,10 @@
 numThreads,32
-numTX,500000
+numTX,5000000
 numOpsPerTX,10
 readRatio,1
 writeRatio,0
 deleteRatio,0
-maxKey,500000
+maxKey,10000000
 startAmountOfKeys,10000
 rebuildMinTreeLeafSize,4
 rebuildCollaborationThreshold,60

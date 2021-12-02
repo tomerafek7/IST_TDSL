@@ -112,7 +112,7 @@ public class TX {
         HashSet<ISTNode> lockedISTNodes = new HashSet<>();
 
         if (!abort) {
-            for ( Entry<ISTNode, ISTNode> entry : ISTWriteSet.entrySet()) {
+            for (Entry<ISTNode, ISTNode> entry : ISTWriteSet.entrySet()) {
                 ISTNode node = entry.getKey();
                 if (!node.tryLock()) {
                     abort = true;
@@ -177,7 +177,7 @@ public class TX {
         if (!abort) {
 
             for (Object o : ISTReadSet) {
-                ISTNode node = (ISTNode)o;
+                ISTNode node = (ISTNode) o;
                 if (!lockedISTNodes.contains(node) && node.isLocked()) {
                     // someone else holds the lock
                     abort = true;
@@ -247,14 +247,11 @@ public class TX {
                 ISTNode fakeNode = entry.getValue();
                 ISTNode node = entry.getKey();
 
-                if(fakeNode.isInner) { // single --> inner
-                    if (node.isInner){
-                        int x = 1;
-                    }
+                if (fakeNode.isInner) { // single --> inner
                     assert !node.isInner;
                     node.inner = fakeNode.inner;
                     node.minKey = node.inner.keys.get(0);
-                    node.maxKey = node.inner.keys.get(node.inner.keys.size()-1);
+                    node.maxKey = node.inner.keys.get(node.inner.keys.size() - 1);
                     node.single = null;
                     node.isInner = true;
                 } else { // single --> single
@@ -302,22 +299,22 @@ public class TX {
         }
 
         // IST - Fetch-And-Add
-        for(ISTNode node : localStorage.decActiveList){
+        for (ISTNode node : localStorage.decActiveList) {
             node.inner.activeTX.decrementAndGet();
 //            while(true){
 //                int active = node.inner.activeTX.get();
 //                boolean result = node.inner.activeTX.compareAndSet(active, active-1);
 //                if(result) break;
 //            }
-            if(node.inner.activeTX.get() < 0) {
+            if (node.inner.activeTX.get() < 0) {
                 TX.print("NODE: " + node + " (TID: " + localStorage.tid + ") TXend: ActiveTX = " + node.inner.activeTX.get() + "Clear Flag = " + localStorage.debugClear);
             }
-            if(!node.inner.activeThreadsSet.remove(localStorage.tid)){ // cleaning this TX from all relevant nodes)
-                 TX.print("Cannot find TID = " + localStorage.tid + " in " + node.inner.activeThreadsSet.toString());
-                 assert false;
+            if (!node.inner.activeThreadsSet.remove(localStorage.tid)) { // cleaning this TX from all relevant nodes)
+                TX.print("Cannot find TID = " + localStorage.tid + " in " + node.inner.activeThreadsSet.toString());
+                assert false;
             }
         }
-        if(!abort) {
+        if (!abort) {
             for (ISTNode node : localStorage.incUpdateList) {
                 node.incrementRebuildCounter(localStorage.TxNum);
             }
@@ -359,7 +356,7 @@ public class TX {
         long millis = localStorage.stopwatchTx.elapsed(TimeUnit.MILLISECONDS);
         long millisWait = localStorage.stopwatchWaiting.elapsed(TimeUnit.MILLISECONDS);
         TX.print("TX TIME:" + millis + " ms");
-        TX.print("TX WAIT TIME:" + millisWait + " ms" );
+        TX.print("TX WAIT TIME:" + millisWait + " ms");
         TX.print("COMMITTED SUCCESSFULLY, TX = " + localStorage.TxNum);
         return true;
 
