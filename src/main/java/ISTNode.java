@@ -15,6 +15,8 @@ public class ISTNode {
     private static final long versionNegMask = lockMask | deleteMask | singletonMask;
     private AtomicLong versionAndFlags = new AtomicLong();
 
+    // Constructors:
+
     public ISTNode(List<ISTNode> childrenList, int leaves){
         inner = new ISTInnerNode(childrenList, leaves);
         single = null;
@@ -79,7 +81,7 @@ public class ISTNode {
     }
 
     // increment counter for node. if it meets the rebuild conditions AND no other TX reached the threshold, "sign" it with TxNum.
-    protected void incrementRebuildCounter(long TxNum) {
+    protected void incrementRebuildCounter() {
         int count = this.inner.updateCount++;
         if (count > (this.inner.numOfLeaves * IST.rebuildUpdatesRatioThreshold) && count > IST.rebuildMinUpdatesThreshold &&
                 this.inner.needRebuildVersion == -1L) {

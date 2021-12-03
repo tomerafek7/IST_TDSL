@@ -316,7 +316,7 @@ public class TX {
         }
         if (!abort) {
             for (ISTNode node : localStorage.incUpdateList) {
-                node.incrementRebuildCounter(localStorage.TxNum);
+                node.incrementRebuildCounter();
             }
         }
         // cleanup

@@ -11,18 +11,17 @@ public class ISTInnerNode {
     ArrayList<Integer> keys;
     ArrayList<ISTNode> children;
     int updateCount;
-    long needRebuildVersion;
-    AtomicInteger activeTX; // rebuildFlag == (activeTX = -1)
-    AtomicInteger waitQueueIndexCount;
-    AtomicInteger waitQueueIndexRebuild;
+    long needRebuildVersion; // for synchronizing the start of the rebuild operation
+    AtomicInteger activeTX; // rebuildFlag == (activeTX = ACTIVE_REBUILD_MARK) (const defined in IST)
+    AtomicInteger waitQueueIndexCount; // for rebuild
+    AtomicInteger waitQueueIndexRebuild; // for rebuild
     int numOfLeaves; // used only in rebuild
     boolean finishedCount; // used only in rebuild
     ISTRebuildObject rebuildObject;
     AtomicReference<ISTRebuildObject> rebuildObjectAtomicReference;
-    Set<Long> activeThreadsSet;
-    //boolean rebuildFlag; rebuildFlag == (activeTX = -1)
+    Set<Long> activeThreadsSet; // holds all of the active TXs in this node's subtree
     int debugNumOfLeaves; // used only in debug
-    ReentrantLock debugLock;
+    ReentrantLock debugLock; // debug
 
     public ISTInnerNode(List<ISTNode> childrenList, int leaves){
         numOfLeaves = 0;
